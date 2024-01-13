@@ -1,0 +1,8 @@
+/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/turtlesim/rosidl_adapter/turtlesim:action/RotateAbsolute.idl
+/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/turtlesim/rosidl_adapter/turtlesim:msg/Color.idl
+/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/turtlesim/rosidl_adapter/turtlesim:msg/Pose.idl
+/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/turtlesim/rosidl_adapter/turtlesim:srv/Kill.idl
+/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/turtlesim/rosidl_adapter/turtlesim:srv/SetPen.idl
+/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/turtlesim/rosidl_adapter/turtlesim:srv/Spawn.idl
+/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/turtlesim/rosidl_adapter/turtlesim:srv/TeleportAbsolute.idl
+/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/turtlesim/rosidl_adapter/turtlesim:srv/TeleportRelative.idl

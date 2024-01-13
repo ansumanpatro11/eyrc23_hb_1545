@@ -1,0 +1,16 @@
+[0.719s] Invoking command in '/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a': AMENT_PREFIX_PATH=/home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/turtlesim:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/turtlesim LD_LIBRARY_PATH=/home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/turtlesim/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a/prefix_override:/home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/hb_task_1a/lib/python3.10/site-packages:/home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/turtlesim/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a/build --no-deps install_data
+[0.921s] running develop
+[1.041s] running egg_info
+[1.041s] writing hb_task_1a.egg-info/PKG-INFO
+[1.041s] writing dependency_links to hb_task_1a.egg-info/dependency_links.txt
+[1.042s] writing entry points to hb_task_1a.egg-info/entry_points.txt
+[1.042s] writing requirements to hb_task_1a.egg-info/requires.txt
+[1.042s] writing top-level names to hb_task_1a.egg-info/top_level.txt
+[1.043s] reading manifest file 'hb_task_1a.egg-info/SOURCES.txt'
+[1.043s] writing manifest file 'hb_task_1a.egg-info/SOURCES.txt'
+[1.045s] running build_ext
+[1.045s] Creating /home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/hb_task_1a/lib/python3.10/site-packages/hb-task-1a.egg-link (link to .)
+[1.045s] 
+[1.045s] Installed /home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a
+[1.046s] running install_data
+[1.086s] Invoked command in '/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a' returned '0': AMENT_PREFIX_PATH=/home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/turtlesim:${AMENT_PREFIX_PATH} CMAKE_PREFIX_PATH=/home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/turtlesim LD_LIBRARY_PATH=/home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/turtlesim/lib:${LD_LIBRARY_PATH} PYTHONPATH=/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a/prefix_override:/home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/hb_task_1a/lib/python3.10/site-packages:/home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/turtlesim/local/lib/python3.10/dist-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a/build --no-deps install_data

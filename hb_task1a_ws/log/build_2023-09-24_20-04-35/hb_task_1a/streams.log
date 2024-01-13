@@ -1,0 +1,23 @@
+[0.584s] Invoking command in '/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a': PYTHONPATH=/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a/prefix_override:/home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/hb_task_1a/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a/build --no-deps install_data
+[0.791s] running develop
+[0.911s] running egg_info
+[0.911s] creating hb_task_1a.egg-info
+[0.911s] writing hb_task_1a.egg-info/PKG-INFO
+[0.912s] writing dependency_links to hb_task_1a.egg-info/dependency_links.txt
+[0.912s] writing entry points to hb_task_1a.egg-info/entry_points.txt
+[0.912s] writing requirements to hb_task_1a.egg-info/requires.txt
+[0.912s] writing top-level names to hb_task_1a.egg-info/top_level.txt
+[0.912s] writing manifest file 'hb_task_1a.egg-info/SOURCES.txt'
+[0.913s] reading manifest file 'hb_task_1a.egg-info/SOURCES.txt'
+[0.913s] writing manifest file 'hb_task_1a.egg-info/SOURCES.txt'
+[0.914s] running build_ext
+[0.914s] Creating /home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/hb_task_1a/lib/python3.10/site-packages/hb-task-1a.egg-link (link to .)
+[0.915s] 
+[0.915s] Installed /home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a
+[0.915s] running install_data
+[0.915s] creating /home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/hb_task_1a/share/ament_index
+[0.915s] creating /home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/hb_task_1a/share/ament_index/resource_index
+[0.916s] creating /home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/hb_task_1a/share/ament_index/resource_index/packages
+[0.916s] copying resource/hb_task_1a -> /home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/hb_task_1a/share/ament_index/resource_index/packages
+[0.916s] copying package.xml -> /home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/hb_task_1a/share/hb_task_1a
+[0.957s] Invoked command in '/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a' returned '0': PYTHONPATH=/home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a/prefix_override:/home/ubuntu2204/eyrc_hb/hb_task1a_ws/install/hb_task_1a/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py develop --editable --build-directory /home/ubuntu2204/eyrc_hb/hb_task1a_ws/build/hb_task_1a/build --no-deps install_data
