@@ -1,0 +1,5 @@
+  File "/home/ansuman/eyrc_hb/hb_task1b_ws/install/hb_task_1b/lib/python3.10/site-packages/hb_task_1b/controller.py", line 212
+    if abs(distance_error<tolerance_dist:
+                                        ^
+SyntaxError: invalid syntax
+
