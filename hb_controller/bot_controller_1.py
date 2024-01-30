@@ -36,6 +36,8 @@ import math
 from geometry_msgs.msg import Twist, Pose2D, Wrench
 from my_robot_interfaces.msg import Goal   
 from std_msgs.msg import Int32
+from std_msgs.msg import Bool
+
 # import matplotlib.pyplot as plt          
 
 
@@ -61,6 +63,8 @@ class HBController(Node):
 
 
         self.pen_mode= self.create_publisher(Int32,'/pen_mode',10)
+        self.pen_bool = self.create_publisher(Bool, '\pen1_down', 10)
+
         
         self.pose_subs = self.create_subscription(Pose2D, '/pen1_pose', self.odometryCb, 10)
         
@@ -72,6 +76,8 @@ class HBController(Node):
         self.vel=Twist()
         
         self.pen_mode_msg=Int32()
+        self.pen_bool = Bool()
+
         self.rw_msg = Wrench()
         self.lw_msg = Wrench()
         self.fw_msg = Wrench()
@@ -245,7 +251,7 @@ def main(args=None):
                     
             if abs(distance_error)<=tolerance_dist and hb_controller.i==0:
                 
-                hb_controller.pen_mode_msg=1
+                hb_controller.pen_mode_msg=True
                 hb_controller.pen_mode.publish(hb_controller.pen_mode_msg)
                 time.sleep(0.5)
                 
@@ -271,7 +277,7 @@ def main(args=None):
                 
                 hb_controller.i+=1
                 if(hb_controller.i==len(hb_controller.bot_1_x))-1:
-                    hb_controller.pen_mode.publish(0)
+                    hb_controller.pen_bool.publish(False)
                     time.sleep(0.5)
                    
                 
