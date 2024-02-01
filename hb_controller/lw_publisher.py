@@ -25,16 +25,15 @@ class HBController(Node):
     
     # def publishing(self):
     
-        self.velocities.linear.y=90.0#lw
-        self.velocities.linear.x=90.0#fw
-        self.velocities.linear.z=180.0#rw
+        self.velocities.linear.y=0.0#lw
+        self.velocities.linear.x=0.0#fw
+        self.velocities.linear.z=0.0#rw
         self.vel_pub.publish(self.velocities)
         # time.sleep(6.53)
         # self.velocities.linear.y=1500.0#lw
         # self.velocities.linear.x=1500.0#fw
         # self.velocities.linear.z=1500.0#rw
         # self.vel_pub.publish(self.velocities)
-   
    
 def main(args=None):
     rclpy.init(args=args)

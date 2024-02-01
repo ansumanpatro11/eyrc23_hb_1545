@@ -18,9 +18,9 @@
 '''
 
 
-# Team ID:		[ Team-ID ]
+# Team ID:		[ 1545 ]
 # Author List:		[ Names of team members worked on this file separated by Comma: Name1, Name2, ... ]
-# Filename:		feedback.py
+# Filename:		controller.py
 # Functions:
 #			[ Comma separated list of functions in this file ]
 # Nodes:		Add your publishing and subscribing node
@@ -37,15 +37,14 @@ from geometry_msgs.msg import Twist, Pose2D, Wrench
 from my_robot_interfaces.msg import Goal   
 from std_msgs.msg import Int32
 from std_msgs.msg import Bool
-
+from control_utils import *
 # import matplotlib.pyplot as plt          
 
 
 class HBController(Node):
     def __init__(self):
         super().__init__('hb_controller')
-        
-
+    
         # Initialise the required variables
         self.bot_1_x = [300,400,400,300,300]
         self.bot_1_y = [100,100,200,200,100]
@@ -72,8 +71,8 @@ class HBController(Node):
         # self.kp = 0.4  # Proportional gain for position control
         self.ka = 0.04  # Proportional gain for angular control
         # dictionary for pid constants
-        self.pid_const_linear={'Kp':0.22,'Ki':0.0009,'Kd':0.0084}
-        self.pid_const_angular={'Kp':0.04,'Ki':0.0,'Kd':0.0}
+        self.pid_const_linear={'Kp':0.2,'Ki':0.0004,'Kd':0.0099}
+        self.pid_const_angular={'Kp':0.09,'Ki':0.0,'Kd':0.0}
         self.intg_const={'linear':0.0,'angular':0.0}
         self.last_error_const={'linear':0.0,'angular':0.0}
         self.i=0
@@ -87,21 +86,11 @@ class HBController(Node):
         self.lw_msg = Wrench()
         self.fw_msg = Wrench()
         
-        
-        
         # self.msg_x=
         # self.msg_y=
         # self.bot_1_x = [200,175,125,100,125,175,200]
         # self.bot_1_y = [150,200,200,150,100,100,150]
         # self.bot_1_theta = 0.0
-
-
-
-        # NOTE: You are strictly NOT-ALLOWED to use "cmd_vel" or "odom" topics in this task
-	    #	Use the below given topics to generate motion for the robot.
-	    #   /hb_bot_1/left_wheel_force,
-	    #   /hb_bot_1/right_wheel_force,
-	    #   /hb_bot_1/left_wheel_force
 
         #Similar to this you can create subscribers for hb_bot_2 and hb_bot_3
         self.subscription = self.create_subscription(
@@ -116,47 +105,24 @@ class HBController(Node):
         # For maintaining control loop rate.
         self.rate = self.create_rate(100)
 
-    def inverse_kinematics(self, vx, vy, w):
-        # Calculate wheel forces based on desired velocity and angular velocity
-        r=1.9
-        u1=(0.33*w+0.67*vx)/r
-        u2=(0.33*w-0.33*vx+0.58*vy)/r
-        u3=(0.33*w-0.33*vx-0.58*vy)/r
-
-        return u1, u2, u3
-
-    # def goalCallBack(self, msg):
-    
-    def Vel2RPM(self,fw_vel,lw_vel, rw_vel):
-        fw_rpm=fw_vel*30/math.pi
-        lw_rpm=lw_vel*30/math.pi
-        rw_rpm=rw_vel*30/math.pi
+    # def goalCallBack(self, msg):     
         
-        return fw_rpm,lw_rpm,rw_rpm
-
-    # clip velocities incase it exceeds 196RPM (Hardware limit in our case)
-    def map_vel(self,vel, in_min,in_max, out_min,  out_max) :
-        mapped=(abs(vel) - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-        if vel<0:
-            mapped_vel=-mapped
-        else:
-            mapped_vel=mapped
-            
-        return mapped_vel
-    
-    def smallRPM(self,fact,vel_fw,vel_rw,vel_lw):
-        min_rpm=0
-        min_rpm=min(vel_fw,vel_lw,vel_rw)
         
-        if abs(vel_fw)<10 :
-            vel_fw*=fact
-        if abs(vel_lw)<10:
-            vel_lw*=fact
-        if abs(vel_rw)<10:
-            vel_rw*=fact
-        return vel_fw,vel_rw,vel_lw
+    def odometryCb(self, pose: Pose2D):
+        # Callback function to update robot's position and orientation from odometry data
+        
+        self.hb_x = pose.x
+        self.hb_y = pose.y
+        self.hb_theta = pose.theta
         
     
+    
+    def goalCallBack(self, msg):
+        self.bot_1_x = msg.x
+        self.bot_1_y = msg.y
+        self.bot_1_theta = msg.theta
+        
+        
     def pid(self,error, const, intg, last_error):
         prop = error
         intg = error + intg
@@ -167,101 +133,29 @@ class HBController(Node):
         last_error = error
 
         return balance
+
+
     def getAngVel(self,error, const, threshold_angle):
-        ang_vel=0
+            ang_vel=0
 
-        # if angular error more than the threshold then computer velocity
-        if abs(error) > threshold_angle:
-            if error > 3.14:
-                ang_vel = self.pid((error-6.28), const, self.intg_const['angular'], self.last_error_const['angular']) # from intg_params and last_error_params choose the intg and last_param 
-            elif error < -3.14:                                                                         # meant for angular pid(w)
-                ang_vel = self.pid((error+6.28), const, self.intg_const['angular'], self.last_error_const['angular'])
-            else:
-                ang_vel = self.pid(error, const, self.intg_const['angular'], self.last_error_const['angular'])
+            # if angular error more than the threshold then computer velocity
+            if abs(error) > threshold_angle:
+                if error > 3.14:
+                    ang_vel = self.pid((error-6.28), const, self.intg_const['angular'], self.last_error_const['angular']) # from intg_params and last_error_params choose the intg and last_param 
+                elif error < -3.14:                                                                         # meant for angular pid(w)
+                    ang_vel = self.pid((error+6.28), const, self.intg_const['angular'], self.last_error_const['angular'])
+                else:
+                    ang_vel = self.pid(error, const, self.intg_const['angular'], self.last_error_const['angular'])
 
-        return ang_vel
-
+            return ang_vel
+        
     def getangle(self,theta):
         if theta>3.14:
             theta=theta-2*math.pi
         elif theta<-3.14:
             theta=theta+2*math.pi
         return theta
-        # if abs(fw_rpm)>50 or abs(lw_rpm)>50 or abs(rw_rpm)>50:
-        #     max_rpm_magnitude=max(abs(fw_rpm), abs(lw_rpm), abs(rw_rpm))
-
-        #     fw_rpm=float(fw_rpm)/max_rpm_magnitude*50
-        #     lw_rpm=float(lw_rpm)/max_rpm_magnitude*50
-        #     rw_rpm=float(rw_rpm)/max_rpm_magnitude*50
-            
-        # if abs(fw_rpm)>50 or abs(lw_rpm)>50 or abs(rw_rpm)>50:
-            
-        # return fw_rpm, lw_rpm, rw_rpm
-    
-        
-      
-        
-        
-        
-    def odometryCb(self, pose: Pose2D):
-        # Callback function to update robot's position and orientation from odometry data
-        
-        self.hb_x = pose.x
-        self.hb_y = pose.y
-        self.hb_theta = pose.theta
-        
-    # def getError(self, error):
-
-
-
-    #         if error > 3.14:
-    #             ang_error = (error-6.28)
-    #         elif error < -3.14:
-    #             ang_error = (error+6.28)
-    #         else:
-    #             ang_error = error
-             
-    #         return ang_error
-    
-    def goalCallBack(self, msg):
-        self.bot_1_x = msg.x
-        self.bot_1_y = msg.y
-        self.bot_1_theta = msg.theta
-    
-
-    def theta_modify(self,g_theta):
-        
-        
-        if g_theta>3.14:
-            g_theta=g_theta-math.pi
-            
-        else:
-            g_theta=g_theta
-
-        return g_theta        
-
-    
-    def limitVel(self,vel):
-        
-        if vel>0:
-            get_vel=min(80,vel)
-
-        else:
-            get_vel=max(-80,vel)   
-            
-        return get_vel  
-    
-    def clip_wheel_vel(self,fw_vel,rw_vel,lw_vel):
-        max_vel=max(abs(lw_vel),abs(rw_vel),abs(fw_vel))
-        
-        if abs(fw_vel) > 50 or abs(rw_vel) >50 or abs(lw_vel)>50  :
-            fw_vel=(fw_vel/max_vel)*50
-            lw_vel=(lw_vel/max_vel)*50
-            rw_vel=(rw_vel/max_vel)*50
-            
-        
-        return fw_vel,rw_vel,lw_vel 
-    
+         
 
 def main(args=None):
     rclpy.init(args=args)
@@ -275,10 +169,7 @@ def main(args=None):
             x_goal=hb_controller.bot_1_x[hb_controller.i]
             y_goal=hb_controller.bot_1_y[hb_controller.i]
             theta_goal=0.0
-            
-            
-            
-            
+                     
             # ax.plot(hb_controller.path_x, hb_controller.path_y, label='Bot 1 Path', color='blue')
             # ax.legend()
             # plt.pause(0.01)
@@ -295,8 +186,8 @@ def main(args=None):
             
                        
             distance_error = math.sqrt(math.pow((x_goal - hb_controller.hb_x), 2) + math.pow((y_goal - hb_controller.hb_y), 2))
-            tolerance_dist = 7
-            tolerance_theta = 0.9
+            tolerance_dist = 5.2
+            tolerance_theta = 0.8
             
             e_theta_rframe = e_theta
             e_x_rframe = (math.cos(hb_controller.hb_theta)) * (e_x) + (math.sin(hb_controller.hb_theta)) * (e_y)
@@ -323,10 +214,25 @@ def main(args=None):
             #     hb_controller.pen_mode.publish(hb_controller.pen_mode_msg)
             #     time.sleep(0.5)
             if abs(e_x)>= tolerance_dist or abs(e_y)>=tolerance_dist:
-                fw_vel_x, rw_vel_x, lw_vel_x = hb_controller.inverse_kinematics(vel_x, vel_y, vel_w)
-                fw_vel_x, rw_vel_x, lw_vel_x =hb_controller.Vel2RPM(fw_vel_x,rw_vel_x,lw_vel_x)
+                fw_vel_x, rw_vel_x, lw_vel_x = inverse_kinematics(vel_x, vel_y, vel_w)
+                fw_vel_x, rw_vel_x, lw_vel_x =Vel2RPM(fw_vel_x,rw_vel_x,lw_vel_x)
                 # fw_vel_x, rw_vel_x, lw_vel_x=hb_controller.smallRPM(1.2,fw_vel_x,rw_vel_x,lw_vel_x)
-                fw_vel_x, rw_vel_x, lw_vel_x=hb_controller.clip_wheel_vel(fw_vel_x,rw_vel_x,lw_vel_x)
+                fw_vel_x, rw_vel_x, lw_vel_x=clip_wheel_vel(fw_vel_x,rw_vel_x,lw_vel_x)
+                if fw_vel_x<0:
+                    fw_vel_x=map_vel(fw_vel_x,-80,-5,-42,-11)
+                else:
+                    fw_vel_x=map_vel(fw_vel_x,5,80,11,42)
+                
+                if rw_vel_x<0:
+                    rw_vel_x=map_vel(rw_vel_x,-80,-5,-42,-11)
+                else:
+                    rw_vel_x=map_vel(rw_vel_x,5,80,11,42)
+                
+                if lw_vel_x<0:
+                    lw_vel_x=map_vel(lw_vel_x,-80,-5,-42,-11)
+                else:
+                    lw_vel_x=map_vel(lw_vel_x,5,70,11,42)
+                
                 
                 # max_=max(abs(fw_vel_x),abs(rw_vel_x),abs(lw_vel_x))
                 # min_=min(abs(fw_vel_x),abs(rw_vel_x),abs(lw_vel_x))
@@ -354,16 +260,8 @@ def main(args=None):
                 # if(hb_controller.i>0 and hb_controller.i<len((hb_controller.bot_1_x))):
                 #     hb_controller.pen_mode_msg=1
                 #     hb_controller.pen_mode.publish(hb_controller.pen_mode_msg)
-                
-                
-            
-                
 
-
-
-
-
-            elif abs(e_x)< tolerance_dist and abs(e_y)<tolerance_dist:
+            elif abs(e_x)< tolerance_dist and abs(e_y)<tolerance_dist :
                 # Stop the robot by setting wheel forces to zero if goal is reached
                 hb_controller.fw_msg.force.y = 0.0
                 hb_controller.rw_msg.force.y = 0.0
@@ -386,11 +284,7 @@ def main(args=None):
                 #     hb_controller.pen_bool.publish(False)
                 #     time.sleep(0.5)
                    
-                
-            
-            
-             
-            
+         
             # publishing to twist
             
             
