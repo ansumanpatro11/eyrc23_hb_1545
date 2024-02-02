@@ -46,8 +46,8 @@ class HBController(Node):
         super().__init__('hb_controller')
     
         # Initialise the required variables
-        self.bot_1_x = [300,400,400,300,300]
-        self.bot_1_y = [100,100,200,200,100]
+        self.bot_1_x = [200,175,125,100,125,175,200]
+        self.bot_1_y = [150,200,200,150,100,100,150]
         self.bot_1_theta = 0.0
         
         self.hb_x=0.0
@@ -71,8 +71,8 @@ class HBController(Node):
         # self.kp = 0.4  # Proportional gain for position control
         self.ka = 0.04  # Proportional gain for angular control
         # dictionary for pid constants
-        self.pid_const_linear={'Kp':0.2,'Ki':0.0004,'Kd':0.0099}
-        self.pid_const_angular={'Kp':0.09,'Ki':0.0,'Kd':0.0}
+        self.pid_const_linear={'Kp':0.2,'Ki':0.0002,'Kd':0.015}
+        self.pid_const_angular={'Kp':2,'Ki':0.0,'Kd':0.0}
         self.intg_const={'linear':0.0,'angular':0.0}
         self.last_error_const={'linear':0.0,'angular':0.0}
         self.i=0
@@ -186,7 +186,7 @@ def main(args=None):
             
                        
             distance_error = math.sqrt(math.pow((x_goal - hb_controller.hb_x), 2) + math.pow((y_goal - hb_controller.hb_y), 2))
-            tolerance_dist = 5.2
+            tolerance_dist = 5.78
             tolerance_theta = 0.8
             
             e_theta_rframe = e_theta
@@ -213,7 +213,7 @@ def main(args=None):
             #     hb_controller.pen_mode_msg=True
             #     hb_controller.pen_mode.publish(hb_controller.pen_mode_msg)
             #     time.sleep(0.5)
-            if abs(e_x)>= tolerance_dist or abs(e_y)>=tolerance_dist:
+            if (abs(e_x)>= tolerance_dist) or (abs(e_y)>=tolerance_dist) or (abs(e_theta)>=0.5):
                 fw_vel_x, rw_vel_x, lw_vel_x = inverse_kinematics(vel_x, vel_y, vel_w)
                 fw_vel_x, rw_vel_x, lw_vel_x =Vel2RPM(fw_vel_x,rw_vel_x,lw_vel_x)
                 # fw_vel_x, rw_vel_x, lw_vel_x=hb_controller.smallRPM(1.2,fw_vel_x,rw_vel_x,lw_vel_x)
@@ -261,7 +261,7 @@ def main(args=None):
                 #     hb_controller.pen_mode_msg=1
                 #     hb_controller.pen_mode.publish(hb_controller.pen_mode_msg)
 
-            elif abs(e_x)< tolerance_dist and abs(e_y)<tolerance_dist :
+            elif (abs(e_x)< tolerance_dist) and (abs(e_y)<tolerance_dist) and (abs(e_theta)<0.5):
                 # Stop the robot by setting wheel forces to zero if goal is reached
                 hb_controller.fw_msg.force.y = 0.0
                 hb_controller.rw_msg.force.y = 0.0

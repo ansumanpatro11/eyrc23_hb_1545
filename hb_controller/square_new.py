@@ -101,7 +101,7 @@ def main(args=None):
         elif node.count==4:
             node.stop(5)
         # node.publish_velocities()
-        # node.vel_pub.publish(node.velocities)
+        node.vel_pub.publish(node.velocities)
         node.lw_pub.publish(node.lw_msg)
         node.rw_pub.publish(node.rw_msg)
         node.fw_pub.publish(node.fw_msg)

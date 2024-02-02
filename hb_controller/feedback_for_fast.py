@@ -64,8 +64,8 @@ class FeedBack(Node):
         self.bottomright=None
         self.caliberated_image=None
         self.arena_corners=[]
-        # bot_ids=[1,2,3]
-        # self.bot_paths=[[] for _ in range(len[bot_ids])]
+        bot_ids=[11,2,14]
+        self.bot_paths=[[] for _ in range(len(bot_ids))]
         self.distorted_image = None
         self.transformed_image = None
         
@@ -136,7 +136,9 @@ def main(args=None):
                     fb.bottomright=fb.previous_bR
                 if fb.topleft is None:
                     fb.topleft=fb.previous_tL
-                fb.transformed_image=perspective_transform(fb.caliberated_image,fb.arena_corners)
+                if fb.topleft is not None and fb.topright is not None and fb.bottomleft is not None and fb.bottomright is not None:
+
+                    fb.transformed_image=perspective_transform(fb.caliberated_image,fb.arena_corners)
 
 
             
@@ -152,13 +154,13 @@ def main(args=None):
                             # Calculate the center coordinates and orientation (theta) of the detected marker
                             centre_x_opencv = sum(arr[:, 0]) / 4
                             centre_y_opencv = sum(arr[:, 1]) / 4
-                            # cv2.circle(fb.transformed_image, (int(centre_x_opencv), int(centre_y_opencv)), 5, (0, 255, 0), -1)
-                            # self.bot_paths[j].append((self.centre_x_opencv,self.centre_y_opencv))
+                            cv2.circle(fb.transformed_image, (int(centre_x_opencv), int(centre_y_opencv)), 5, (0, 255, 0), -1)
+                            fb.bot_paths[j].append((centre_x_opencv,centre_y_opencv))
                             
-                            # for k in range(len(self.bot_paths[j])):
-                            #     point= self.bot_paths[j][k]
-                            #     cv2.circle(cv_image,(int(point[0]),int(point[1])) ,4,(0,0,255),-1)
-                            #convert the coordinates into cartesian plane
+                            for k in range(len(fb.bot_paths[j])):
+                                point= fb.bot_paths[j][k]
+                                cv2.circle(fb.transformed_image,(int(point[0]),int(point[1])) ,4,(0,0,255),-1)
+                            # convert the coordinates into cartesian plane
                             centre_x = centre_x_opencv
                             centre_y = 500-centre_y_opencv
 
