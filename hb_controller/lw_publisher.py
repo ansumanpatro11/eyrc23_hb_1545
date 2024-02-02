@@ -26,7 +26,7 @@ class HBController(Node):
     # def publishing(self):
     
         self.velocities.linear.y=0.0#lw
-        self.velocities.linear.x=0.0#fw
+        self.velocities.linear.x=-0.0#fw
         self.velocities.linear.z=0.0#rw
         self.vel_pub.publish(self.velocities)
         # time.sleep(6.53)

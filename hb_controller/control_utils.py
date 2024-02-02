@@ -131,10 +131,10 @@ def inverse_kinematics( vx, vy, w):
 def clip_wheel_vel(fw_vel,rw_vel,lw_vel):
         max_vel=max(abs(lw_vel),abs(rw_vel),abs(fw_vel))
         
-        if abs(fw_vel) > 80 or abs(rw_vel) >80 or abs(lw_vel)>80 :
-            fw_vel=(fw_vel/max_vel)*80
-            lw_vel=(lw_vel/max_vel)*80
-            rw_vel=(rw_vel/max_vel)*80
+        if abs(fw_vel) > 45 or abs(rw_vel) >45 or abs(lw_vel)>45 :
+            fw_vel=(fw_vel/max_vel)*45
+            lw_vel=(lw_vel/max_vel)*45
+            rw_vel=(rw_vel/max_vel)*45
             
         
         return fw_vel,rw_vel,lw_vel 

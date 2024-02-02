@@ -46,8 +46,8 @@ class HBController(Node):
         super().__init__('hb_controller')
     
         # Initialise the required variables
-        self.bot_1_x = [200,175,125,100,125,175,200]
-        self.bot_1_y = [150,200,200,150,100,100,150]
+        self.bot_1_x = [200,225,250,275,300,325,350]
+        self.bot_1_y = [150,150,150,150,150,150,150]
         self.bot_1_theta = 0.0
         
         self.hb_x=0.0
@@ -71,8 +71,8 @@ class HBController(Node):
         # self.kp = 0.4  # Proportional gain for position control
         self.ka = 0.04  # Proportional gain for angular control
         # dictionary for pid constants
-        self.pid_const_linear={'Kp':0.2,'Ki':0.0002,'Kd':0.015}
-        self.pid_const_angular={'Kp':2,'Ki':0.0,'Kd':0.0}
+        self.pid_const_linear={'Kp':0.2,'Ki':0.0,'Kd':0.1}
+        self.pid_const_angular={'Kp':1.5,'Ki':0.0,'Kd':0.0}
         self.intg_const={'linear':0.0,'angular':0.0}
         self.last_error_const={'linear':0.0,'angular':0.0}
         self.i=0
@@ -186,7 +186,7 @@ def main(args=None):
             
                        
             distance_error = math.sqrt(math.pow((x_goal - hb_controller.hb_x), 2) + math.pow((y_goal - hb_controller.hb_y), 2))
-            tolerance_dist = 5.78
+            tolerance_dist = 6
             tolerance_theta = 0.8
             
             e_theta_rframe = e_theta
@@ -263,18 +263,18 @@ def main(args=None):
 
             elif (abs(e_x)< tolerance_dist) and (abs(e_y)<tolerance_dist) and (abs(e_theta)<0.5):
                 # Stop the robot by setting wheel forces to zero if goal is reached
-                hb_controller.fw_msg.force.y = 0.0
-                hb_controller.rw_msg.force.y = 0.0
-                hb_controller.lw_msg.force.y = 0.0
+                # hb_controller.fw_msg.force.y = 0.0
+                # hb_controller.rw_msg.force.y = 0.0
+                # hb_controller.lw_msg.force.y = 0.0
                 
-                # print(f"i={hb_controller.i}")
-                hb_controller.fw_pub.publish(hb_controller.fw_msg)
-                hb_controller.lw_pub.publish(hb_controller.lw_msg)
-                hb_controller.rw_pub.publish(hb_controller.rw_msg)
-                hb_controller.vel.linear.x=fw_vel_x
-                hb_controller.vel.linear.y= rw_vel_x
-                hb_controller.vel.linear.z= lw_vel_x
-                hb_controller.vel_pub.publish(hb_controller.vel)
+                # # print(f"i={hb_controller.i}")
+                # hb_controller.fw_pub.publish(hb_controller.fw_msg)
+                # hb_controller.lw_pub.publish(hb_controller.lw_msg)
+                # hb_controller.rw_pub.publish(hb_controller.rw_msg)
+                # hb_controller.vel.linear.x=fw_vel_x
+                # hb_controller.vel.linear.y= rw_vel_x
+                # hb_controller.vel.linear.z= lw_vel_x
+                # hb_controller.vel_pub.publish(hb_controller.vel)
                 print("zero")
                 # time.sleep(1)
                 

@@ -28,7 +28,7 @@ const float d = 71.3725;
 float calculatePWMFromRPM(float rpm) {
   float pwm = a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d;
   return pwm;
-}
+} 
 
 # 0-90
 51.8
