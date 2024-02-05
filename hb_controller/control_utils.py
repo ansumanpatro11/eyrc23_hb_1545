@@ -8,12 +8,12 @@ from my_robot_interfaces.msg import Goal
 from std_msgs.msg import Int32
 from std_msgs.msg import Bool
 
-def Vel2RPM(fw_vel,lw_vel, rw_vel):
+def Vel2RPM(fw_vel,rw_vel, lw_vel):
        fw_rpm=fw_vel*30/math.pi
        lw_rpm=lw_vel*30/math.pi
        rw_rpm=rw_vel*30/math.pi
        
-       return fw_rpm,lw_rpm,rw_rpm
+       return fw_rpm,rw_rpm,lw_rpm
 
 def map_vel(vel, in_min,in_max, out_min,  out_max) :
         mapped=(vel - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
@@ -32,7 +32,7 @@ def smallRPM(self,fact,vel_fw,vel_rw,vel_lw):
         if abs(vel_rw)<10:
             vel_rw*=fact
         return vel_fw,vel_rw,vel_lw
- 
+
 def getAngVel(self,error, const, threshold_angle):
         ang_vel=0
 
@@ -70,16 +70,16 @@ def limitVel(self,vel):
             
         return get_vel  
  
-def clip_wheel_vel(self,fw_vel,rw_vel,lw_vel):
-        max_vel=max(abs(lw_vel),abs(rw_vel),abs(fw_vel))
+# def clip_wheel_vel(self,fw_vel,rw_vel,lw_vel):
+#         max_vel=max(abs(lw_vel),abs(rw_vel),abs(fw_vel))
         
-        if abs(fw_vel) > 80 or abs(rw_vel) >80 or abs(lw_vel)>80  :
-            fw_vel=(fw_vel/max_vel)*80
-            lw_vel=(lw_vel/max_vel)*80
-            rw_vel=(rw_vel/max_vel)*80
+#         if abs(fw_vel) > 80 or abs(rw_vel) >80 or abs(lw_vel)>80  :
+#             fw_vel=(fw_vel/max_vel)*80
+#             lw_vel=(lw_vel/max_vel)*80
+#             rw_vel=(rw_vel/max_vel)*80
             
         
-        return fw_vel,rw_vel,lw_vel 
+#         return fw_vel,rw_vel,lw_vel 
     
 def getError(self, error):
 

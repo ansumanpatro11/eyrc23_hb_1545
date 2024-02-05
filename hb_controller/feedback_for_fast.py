@@ -115,7 +115,7 @@ def main(args=None):
                 # print(f"len_of_corners={len(corners)}")
                 # print(f"corners={corners}")
                 
-                bot_ids=[11,14,2]
+                bot_ids=[11,2,14]
                 fb.caliberated_image=camera_caliberation(fb.distorted_image)
 
                 fb.corners,fb.ids=aruco_detect(fb.caliberated_image)
@@ -144,39 +144,42 @@ def main(args=None):
             
                 
                 # Check if marker ID 1 is detected.
-                corners,ids=aruco_detect(thresholding(fb.transformed_image))
+                if fb.transformed_image is not None:
+                    corners,ids=aruco_detect(thresholding(fb.transformed_image))
                 
-                for i in range(len(corners)):
-                    for j in range(len(bot_ids)):
-                        if ids[i][0]==bot_ids[j]:
-                            # print(ids,corners)
-                            arr=corners[i][0]
-                            # Calculate the center coordinates and orientation (theta) of the detected marker
-                            centre_x_opencv = sum(arr[:, 0]) / 4
-                            centre_y_opencv = sum(arr[:, 1]) / 4
-                            cv2.circle(fb.transformed_image, (int(centre_x_opencv), int(centre_y_opencv)), 5, (0, 255, 0), -1)
-                            fb.bot_paths[j].append((centre_x_opencv,centre_y_opencv))
-                            
-                            for k in range(len(fb.bot_paths[j])):
-                                point= fb.bot_paths[j][k]
-                                cv2.circle(fb.transformed_image,(int(point[0]),int(point[1])) ,4,(0,0,255),-1)
-                            # convert the coordinates into cartesian plane
-                            centre_x = centre_x_opencv
-                            centre_y = 500-centre_y_opencv
+                    for i in range(len(corners)):
+                        for j in range(len(bot_ids)):
+                            if ids[i][0]==bot_ids[j]:
+                                # print(ids,corners)
+                                arr=corners[i][0]
+                                # Calculate the center coordinates and orientation (theta) of the detected marker
+                                centre_x_opencv = sum(arr[:, 0]) / 4
+                                centre_y_opencv = sum(arr[:, 1]) / 4
+                                # cv2.circle(fb.transformed_image, (int(centre_x_opencv), int(centre_y_opencv)), 5, (0, 255, 0), -1)
+                                fb.bot_paths[j].append((centre_x_opencv,centre_y_opencv))
+                                
+                                for k in range(len(fb.bot_paths[j])):
+                                    point= fb.bot_paths[j][k]
+                                    cv2.circle(fb.transformed_image,(int(point[0]),int(point[1])) ,2,(0,0,255),-1)
+                                # convert the coordinates into cartesian plane
+                                centre_x = centre_x_opencv
+                                centre_y = 500-centre_y_opencv
 
-                            # Calculate the orientation angle (theta) of the marker.
-                            right_centre_x = (float((arr[1, 0] + arr[2, 0]) / 2))
-                            right_centre_y = 500-float((arr[1, 1] + arr[2, 1]) / 2)            
-                            theta = math.atan2((centre_y - right_centre_y) , centre_x - right_centre_x)
-                            
-                            theta+= math.pi
-                            print(bot_ids[j],centre_x, centre_y, theta)
-                            fb.msg[j].x=centre_x
-                            fb.msg[j].y=centre_y
-                            fb.msg[j].theta=theta
-                            fb.pub1.publish(fb.msg[j])
-                            cv2.imshow('frame',fb.transformed_image)
-                            cv2.waitKey(1)
+                                # Calculate the orientation angle (theta) of the marker.
+                                right_centre_x = (float((arr[1, 0] + arr[2, 0]) / 2))
+                                right_centre_y = 500-float((arr[1, 1] + arr[2, 1]) / 2)            
+                                theta = math.atan2((centre_y - right_centre_y) , centre_x - right_centre_x)
+                                
+                                theta+= math.pi
+                                print(bot_ids[j],centre_x, centre_y, theta)
+                                fb.msg[j].x=centre_x
+                                fb.msg[j].y=centre_y
+                                fb.msg[j].theta=theta
+                                fb.pub1.publish(fb.msg[0])
+                                fb.pub2.publish(fb.msg[1])
+                                fb.pub3.publish(fb.msg[2])
+                                cv2.imshow('frame',fb.transformed_image)
+                                cv2.waitKey(1)
                             
 
                 
