@@ -91,13 +91,13 @@ def main(args=None):
     while rclpy.ok:
         
         if node.count==0:
-            node.move_up(23.0)
+            node.move_up(18.0)
         elif node.count==1:
-            node.move_left(5,23.0)
+            node.move_left(5,18.0)
         elif node.count==2:
-            node.move_down(5,23.0)
+            node.move_down(5,18.0)
         elif node.count==3:
-            node.move_right(5,23.0)
+            node.move_right(5,18.0)
         elif node.count==4:
             node.stop(5)
         # node.publish_velocities()

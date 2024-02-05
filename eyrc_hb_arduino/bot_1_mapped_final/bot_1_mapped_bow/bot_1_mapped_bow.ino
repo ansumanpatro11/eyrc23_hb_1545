@@ -51,6 +51,80 @@ void error_loop(){
   }
 }
 
+int fw_pwm(float rpm){
+  int pwm;
+  if(rpm>10){
+
+    //0 t0 90 clockwise
+    const float a = -0.0012;
+    const float b = 0.0923;
+    const float c = -3.8639;
+    const float d = 119.1027;
+
+    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+  }
+  else if(rpm<-10){
+    //90 to 180 anti-clockwise
+    const float a = -0.0006;
+    const float b = -0.0478;
+    const float c = -2.8861;
+    const float d = 75.2306;
+
+    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+  }else{
+    pwm=90;
+  }
+  return pwm;
+}
+int rw_pwm(float rpm){
+  int pwm;
+  if(rpm>10){
+    const float a = 0.0012;
+    const float b = -0.1196;
+    const float c = 1.1861;
+    const float d = 85.5759;
+
+
+
+
+    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+  }
+  else if(rpm<-10){
+    const float a = -0.0002;
+    const float b = -0.0257;
+    const float c = -3.0805;
+    const float d = 69.3717;
+    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+  }else{
+    pwm=90;
+  }
+  return pwm;
+}
+int lw_pwm(float rpm){
+  int pwm;
+  if(rpm>10){
+    const float a = -0.0010;
+    const float b = 0.0837;
+    const float c = -3.7968;
+    const float d = 119.365;
+
+
+
+
+
+    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+  }
+  else if(rpm<-10){
+    const float a = -0.0007;
+    const float b = -0.0601;
+    const float c = -3.2047;
+    const float d = 71.6505;
+        pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+  }else{
+    pwm=90;
+  }
+  return pwm;
+}
 //twist message cb
 void subscription_callback(const void *msgin) {
   const geometry_msgs__msg__Twist * msg = (const geometry_msgs__msg__Twist *)msgin;
@@ -61,14 +135,19 @@ void subscription_callback(const void *msgin) {
   int vel_fw=msg->linear.x;
   int vel_lw=msg->linear.y;
   int vel_rw=msg->linear.z;
-  int position_fw = map(vel_fw, -20, 20, 24, 165);
-  int position_lw = map(vel_lw, -20, 20, 26, 161);
-  int position_rw = map(vel_rw, -20, 20, 0, 180);
-  Serial.println(position_fw);
-  Serial.println(position_lw);
-  Serial.println(position_rw);
+  // int position_fw = map(vel_fw, -20, 20, 24, 165);
+  // int position_lw = map(vel_lw, -20, 20, 26, 161);
+  // int position_rw = map(vel_rw, -20, 20, 0, 180);
+  // Serial.println(position_fw);
+  // Serial.println(position_lw);
+  // Serial.println(position_rw);
 
 
+  // vel_fw=fw_pwm(vel_fw);
+  // vel_rw=rw_pwm(vel_rw);
+  // vel_lw=lw_pwm(vel_lw);
+ 
+  
   // Serial.println(position_fw);
   servo_fw.write(vel_fw);
   servo_lw.write(vel_lw);
@@ -98,12 +177,12 @@ void setup() {
   Serial.begin(9600);
   ESP32PWM:: allocateTimer(0);
 
-  set_microros_wifi_transports("Pixel 4 XL","Amit2000","192.168.50.112",8888);
+  set_microros_wifi_transports("Redmi Note 10 Pro","laliga1234","192.168.64.112",8888);
   servo_init();
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);  
   
-  delay(2000);
+  // delay(2000);
 
   allocator = rcl_get_default_allocator();
 
@@ -140,7 +219,7 @@ void setup() {
 }
 
 void loop() {
-  delay(100);
+  // delay(100);
   RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
   // delay(100);
 
