@@ -44,7 +44,7 @@ from goals import *
 
 class HBController(Node):
     def __init__(self):
-        super().__init__('hb_controller')
+        super().__init__('hb_controller_3')
     
         # Initialise the required variables
         # self.bot_3_x = [200,225,250,275,300,325,350]
@@ -74,8 +74,8 @@ class HBController(Node):
         # self.kp = 0.4  # Proportional gain for position control
         self.ka = 0.04  # Proportional gain for angular control
         # dictionary for pid constants
-        self.pid_const_linear={'Kp':0.22,'Ki':0.00,'Kd':0.001}
-        self.pid_const_angular={'Kp':6,'Ki':0.15,'Kd':0.0}
+        self.pid_const_linear={'Kp':0.23,'Ki':0.00,'Kd':0.001}
+        self.pid_const_angular={'Kp':2,'Ki':0.1,'Kd':0.4}
         self.intg_const={'linear':0.0,'angular':0.0}
         self.last_error_const={'linear':0.0,'angular':0.0}
         self.i=0
@@ -91,7 +91,7 @@ class HBController(Node):
         
         # self.msg_x=
         # self.msg_y=
-        # self.bot_3_x = [300,400,300,300]
+        # self.bot_3_x = [100,200,200,100]
         # self.bot_3_y = [100,100,200,100]
         
         self.bot_3_x,self.bot_3_y=bot_3_goals(self.bot_3_x,self.bot_3_y)
@@ -218,7 +218,7 @@ def main(args=None):
                 
             #     hb_controller.pen_bool_msg.data=True
             #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-            #     time.sleep(0.5)
+            #     time.sleep(3)
             if (abs(e_x_rframe))> tolerance_dist or (abs(e_y_rframe))>tolerance_dist or (abs(hb_controller.getangle(e_theta)))>0.5:
                 fw_vel_x, rw_vel_x, lw_vel_x = inverse_kinematics(vel_x, vel_y, vel_w)
                 
@@ -263,7 +263,7 @@ def main(args=None):
                 
                 hb_controller.vel.linear.x=fw_vel_x
                 hb_controller.vel.linear.y=lw_vel_x
-                hb_controller.vel.linear.z=rw_vel_x
+                hb_controller.vel.linear.z=0.994*rw_vel_x
                 hb_controller.vel_pub.publish(hb_controller.vel)
                 print("running")
                 
@@ -312,8 +312,9 @@ def main(args=None):
                     
             
                 # if(hb_controller.i==len(hb_controller.bot_3_x)-1):
-                #     hb_controller.pen_bool.publish(False)
-                #     time.sleep(0.5)
+                #     hb_controller.pen_bool_msg.data=False
+                #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+                #     time.sleep(1)
                    
          
             # publishing to twist

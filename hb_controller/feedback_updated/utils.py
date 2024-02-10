@@ -17,8 +17,9 @@ def camera_caliberation(distorted_image):
                                        [0.0, 0.0, 1.0]])
 
     dist_coefficients = np.array([-0.433061, 0.169313, 0.003104, 0.005626, 0.0])
-    cv_image = cv2.undistort(distorted_image, camera_matrix, dist_coefficients)
-    return cv_image
+    if distorted_image is not None:
+        cv_image = cv2.undistort(distorted_image, camera_matrix, dist_coefficients)
+        return cv_image
 
 def thresholding(image):
     if image is not None:

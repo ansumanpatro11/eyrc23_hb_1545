@@ -7,12 +7,13 @@
 #include <rclc/executor.h>
 #include <geometry_msgs/msg/twist.h>
 #include <std_msgs/msg/int32.h>
+#include <std_msgs/msg/bool.h>
 
 
 
 rcl_subscription_t subscriber;
 rcl_subscription_t subscriber2;
-std_msgs__msg__Int32 msg2;
+std_msgs__msg__Bool msg_bool;
 
 geometry_msgs__msg__Twist msg;
 rclc_executor_t executor;
@@ -30,7 +31,7 @@ Servo servo_pen_mode;
 #define servo_fw_pin  27
 #define servo_lw_pin  25
 #define servo_rw_pin  26
-// #define servo_pen_pin 28
+#define servo_pen_pin 14
 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
@@ -40,7 +41,7 @@ void servo_init(){
   servo_fw.attach(servo_fw_pin);
   servo_rw.attach(servo_rw_pin);
   servo_lw.attach(servo_lw_pin);
-  // servo_pen_mode.attach(servo_pen_pin);
+  servo_pen_mode.attach(servo_pen_pin);
   
  
 }
@@ -143,9 +144,9 @@ void subscription_callback(const void *msgin) {
   // Serial.println(position_rw);
 
 
-  // vel_fw=fw_pwm(vel_fw);
-  // vel_rw=rw_pwm(vel_rw);
-  // vel_lw=lw_pwm(vel_lw);
+  vel_fw=fw_pwm(vel_fw);
+  vel_rw=rw_pwm(vel_rw);
+  vel_lw=lw_pwm(vel_lw);
  
   
   // Serial.println(position_fw);
@@ -157,17 +158,20 @@ void subscription_callback(const void *msgin) {
   digitalWrite(LED_PIN, (msg->linear.x == 0) ? HIGH : LOW);
 
 }
-// void subscription_callback2(const void *msgin) {
-//   // Your callback logic for the second subscriber
-//    const std_msgs__msg__Int32 * msg2 = (const std_msgs__msg__Int32 *)msgin;
-//    int pen_mode=msg2-> data;
-//    if(pen_mode==1){
-//     int pen_pwm=20;
-//     servo_pen_mode.write(pen_pwm);
+void subscription_callback2(const void *msgin) {
+  // Your callback logic for the second subscriber
+   const std_msgs__msg__Bool * msg_bool = (const std_msgs__msg__Bool *)msgin;
+   bool pen_mode=msg_bool-> data;
+   if(pen_mode==true){
+    int pen_down=128;  //pen down
+    servo_pen_mode.write(pen_down);
 
-//    }
+   }else if(pen_mode==false){
+    int pen_up=165;
+    servo_pen_mode.write(pen_up);
+   }
   
-// }
+}
 
   
   
@@ -199,28 +203,29 @@ void setup() {
     ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
     "/cmd_vel/bot1"));
 
-  // RCCHECK(rclc_subscription_init_default(
-  // &subscriber2,
-  // &node,
-  // ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-  // "/pen_pose"));
+  RCCHECK(rclc_subscription_init_default(
+    &subscriber2,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),
+    "/pen1_down"));
+
 
 
     
 
   // create executor
 
-  RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
+  RCCHECK(rclc_executor_init(&executor, &support.context, 2, &allocator));
   
   RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &msg, &subscription_callback, ON_NEW_DATA));
-  // RCCHECK(rclc_executor_add_subscription(&executor, &subscriber2, &msg2, &subscription_callback2, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &subscriber2, &msg_bool, &subscription_callback2, ON_NEW_DATA));
 
 
 }
 
 void loop() {
   // delay(100);
-  RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
+  RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(1)));
   // delay(100);
 
   

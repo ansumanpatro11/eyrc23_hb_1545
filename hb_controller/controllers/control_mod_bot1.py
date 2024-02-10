@@ -39,13 +39,14 @@ from std_msgs.msg import Int32
 from std_msgs.msg import Bool
 from control_utils import *
 from goals import *
+import feedback_for_fast
 # import matplotlib.pyplot as plt          
 
 
 class HBController(Node):
     def __init__(self):
-        super().__init__('hb_controller')
-    
+        super().__init__('hb_controller_1')
+        
         # Initialise the required variables
         # self.bot_1_x = [200,225,250,275,300,325,350]
         # self.bot_1_y = [150,150,150,150,150,150,150]
@@ -74,12 +75,13 @@ class HBController(Node):
         # self.kp = 0.4  # Proportional gain for position control
         self.ka = 0.04  # Proportional gain for angular control
         # dictionary for pid constants
-        self.pid_const_linear={'Kp':0.22,'Ki':0.00,'Kd':0.001}
-        self.pid_const_angular={'Kp':6,'Ki':0.15,'Kd':0.0}
+        
+        self.pid_const_linear={'Kp':0.15,'Ki':0.0,'Kd':0.0}
+        self.pid_const_angular={'Kp':2,'Ki':0.1,'Kd':1.5}
         self.intg_const={'linear':0.0,'angular':0.0}
         self.last_error_const={'linear':0.0,'angular':0.0}
         self.i=0
-        
+
         self.vel=Twist()
         
         # self.pen_mode_msg=Int32()
@@ -91,8 +93,8 @@ class HBController(Node):
         
         # self.msg_x=
         # self.msg_y=
-        # self.bot_1_x = [300,400,300,300]
-        # self.bot_1_y = [100,100,200,100]
+        # self.bot_1_x = [200,400,400,200,200]
+        # self.bot_1_y = [300,300,400,400,300]
         
         self.bot_1_x,self.bot_1_y=bot_1_goals(self.bot_1_x,self.bot_1_y)
         
@@ -165,12 +167,13 @@ class HBController(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    
+    # ff=feedback_for_fast()
     hb_controller = HBController()
     # fig, ax = plt.subplots()
        
     # Main loop
     rclpy.spin_once(hb_controller)
+    
     while rclpy.ok():
         if hb_controller.i < len(hb_controller.bot_1_x):
             x_goal=hb_controller.bot_1_x[hb_controller.i]
@@ -218,7 +221,8 @@ def main(args=None):
                 
             #     hb_controller.pen_bool_msg.data=True
             #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-            #     time.sleep(0.5)
+            #     time.sleep(1)
+            
             if (abs(e_x_rframe))> tolerance_dist or (abs(e_y_rframe))>tolerance_dist or (abs(hb_controller.getangle(e_theta)))>0.5:
                 fw_vel_x, rw_vel_x, lw_vel_x = inverse_kinematics(vel_x, vel_y, vel_w)
                 
@@ -227,18 +231,18 @@ def main(args=None):
                 print(f'fw_vel_x={fw_vel_x},lw_vel_x={lw_vel_x}rw_vel_x ={rw_vel_x}')
                 # fw_vel_x, rw_vel_x, lw_vel_x=hb_controller.smallRPM(1.2,fw_vel_x,rw_vel_x,lw_vel_x)
                 fw_vel_x, rw_vel_x, lw_vel_x=clip_wheel_vel(fw_vel_x,rw_vel_x,lw_vel_x)
-                if fw_vel_x<-5:
-                    fw_vel_x=map_vel(fw_vel_x,-40,-5,-40,-11)
-                elif fw_vel_x>5:
-                    fw_vel_x=map_vel(fw_vel_x,5,40,11,40)
+                if fw_vel_x<-3:
+                    fw_vel_x=map_vel(fw_vel_x,-40,-3,-40,-11)
+                elif fw_vel_x>3:
+                    fw_vel_x=map_vel(fw_vel_x,3,40,11,40)
                 if rw_vel_x<-3:
                     rw_vel_x=map_vel(rw_vel_x,-40,-3,-40,-11)
                 elif rw_vel_x>3:
                     rw_vel_x=map_vel(rw_vel_x,3,40,11,40)
-                if lw_vel_x<-5:
-                    lw_vel_x=map_vel(lw_vel_x,-40,-5,-40,-11)
-                elif lw_vel_x>5:
-                    lw_vel_x=map_vel(lw_vel_x,5,40,11,40)
+                if lw_vel_x<-3:
+                    lw_vel_x=map_vel(lw_vel_x,-40,-3,-40,-11)
+                elif lw_vel_x>3:
+                    lw_vel_x=map_vel(lw_vel_x,3,40,11,40)
                 
                 
                 # max_=max(abs(fw_vel_x),abs(rw_vel_x),abs(lw_vel_x))
@@ -270,19 +274,20 @@ def main(args=None):
                 # if(hb_controller.i>0 and hb_controller.i<len((hb_controller.bot_1_x))):
                 #     hb_controller.pen_mode_msg=1
                 #     hb_controller.pen_mode.publish(hb_controller.pen_mode_msg)
+            # if hb_controller.hb_theta is not none or hb_controller.hb_x is not None or hb_controller.hb_y is not None
 
             elif (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.5:
                 
                 # Stop the robot by setting wheel forces to zero if goal is reached
              
-                hb_controller.vel.linear.x = 0.0
-                hb_controller.vel.linear.y = 0.0
-                hb_controller.vel.linear.z = 0.0
+                # hb_controller.vel.linear.x = 0.0
+                # hb_controller.vel.linear.y = 0.0
+                # hb_controller.vel.linear.z = 0.0
                 
-                # # hb_controller.fw_msg.force.y = 0.0
-                # # hb_controller.rw_msg.force.y = 0.0
-                # # hb_controller.lw_msg.force.y = 0.0
-                hb_controller.vel_pub.publish(hb_controller.vel)
+                # # # hb_controller.fw_msg.force.y = 0.0
+                # # # hb_controller.rw_msg.force.y = 0.0
+                # # # hb_controller.lw_msg.force.y = 0.0
+                # hb_controller.vel_pub.publish(hb_controller.vel)
                     
                 
                 
@@ -311,9 +316,10 @@ def main(args=None):
                     
                     
             
-                # if(hb_controller.i==len(hb_controller.bot_1_x)-1):
-                #     hb_controller.pen_bool.publish(False)
-                #     time.sleep(0.5)
+                # if(hb_controller.i==len(hb_controller.bot_1_x)):
+                #     hb_controller.pen_bool_msg.data=False
+                #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+                #     time.sleep(1)
                    
          
             # publishing to twist

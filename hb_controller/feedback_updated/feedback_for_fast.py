@@ -46,9 +46,9 @@ class FeedBack(Node):
         self.sub = self.create_subscription(Image, "/camera1/image_raw", self.image_callback, 10)
         
         # Create a publisher for the detected ArUco marker's pose.
-        self.pub1 = self.create_publisher(Pose2D, "/pen1_pose", 10)
-        self.pub2 = self.create_publisher(Pose2D, "/pen2_pose", 10)
-        self.pub3 = self.create_publisher(Pose2D, "/pen3_pose", 10)
+        self.pub1 = self.create_publisher(Pose2D, "/pen1_pose", 1)
+        self.pub2 = self.create_publisher(Pose2D, "/pen2_pose", 1)
+        self.pub3 = self.create_publisher(Pose2D, "/pen3_pose", 1)
         
         # Create a CvBridge instance to convert between ROS image messages and OpenCV images.
         self.bridge = CvBridge()
@@ -158,9 +158,20 @@ def main(args=None):
                                 # cv2.circle(fb.transformed_image, (int(centre_x_opencv), int(centre_y_opencv)), 5, (0, 255, 0), -1)
                                 fb.bot_paths[j].append((centre_x_opencv,centre_y_opencv))
                                 
+                                text = f"ID: {ids[i][0]}"
+                                cv2.putText(fb.transformed_image, text, (int(centre_x_opencv) - 20, int(centre_y_opencv) - 20),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+            
+                                
                                 for k in range(len(fb.bot_paths[j])):
+                                    
                                     point= fb.bot_paths[j][k]
-                                    cv2.circle(fb.transformed_image,(int(point[0]),int(point[1])) ,2,(0,0,255),-1)
+                                    if j==0:
+                                        cv2.circle(fb.transformed_image,(int(point[0]),int(point[1])) ,1,(0,0,255),-1)
+                                    if j==1:
+                                        cv2.circle(fb.transformed_image,(int(point[0]),int(point[1])) ,1,(0,255,0),-1)
+                                    if j==2:
+                                        cv2.circle(fb.transformed_image,(int(point[0]),int(point[1])) ,1,(255,0,0),-1)
                                 # convert the coordinates into cartesian plane
                                 centre_x = centre_x_opencv
                                 centre_y = 500-centre_y_opencv

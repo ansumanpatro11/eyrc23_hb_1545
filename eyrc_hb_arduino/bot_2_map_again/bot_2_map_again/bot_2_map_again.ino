@@ -7,12 +7,13 @@
 #include <rclc/executor.h>
 #include <geometry_msgs/msg/twist.h>
 #include <std_msgs/msg/int32.h>
+#include <std_msgs/msg/bool.h>
 
 
 
 rcl_subscription_t subscriber;
 rcl_subscription_t subscriber2;
-std_msgs__msg__Int32 msg2;
+std_msgs__msg__Bool msg_bool;
 
 geometry_msgs__msg__Twist msg;
 rclc_executor_t executor;
@@ -30,7 +31,7 @@ Servo servo_pen_mode;
 #define servo_fw_pin  27
 #define servo_lw_pin  25
 #define servo_rw_pin  26
-// #define servo_pen_pin 28
+#define servo_pen_pin 14
 
 #define RCCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){error_loop();}}
@@ -40,7 +41,7 @@ void servo_init(){
   servo_fw.attach(servo_fw_pin);
   servo_rw.attach(servo_rw_pin);
   servo_lw.attach(servo_lw_pin);
-  // servo_pen_mode.attach(servo_pen_pin);
+  servo_pen_mode.attach(servo_pen_pin);
   
  
 }
@@ -56,19 +57,19 @@ int fw_pwm(float rpm){
   if(rpm>10){
 
     //0 t0 90 clockwise
-    float a = -0.0020;
-    float b = 0.1719;
-    float c = -6.2266;
-    float d = 138.0841;
+    float a = 0.0002;
+    float b = -0.0185;
+    float c = -1.3463;
+    float d = 103.2878;
 
     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
   }
   else if(rpm<-10){
     //90 to 180 anti-clockwise
-    float a = -0.0005;
-    float b = -0.0450;
-    float c = -3.1333;
-    float d = 71.3381;
+    float a = -0.0001;
+    float b = -0.0152;
+    float c = -2.2642;
+    float d = 79.1319;
 
     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
   }else{
@@ -79,10 +80,10 @@ int fw_pwm(float rpm){
 int rw_pwm(float rpm){
   int pwm;
   if(rpm>10){
-    float a = -0.0022;
-    float b = 0.1795;
-    float c = -6.1369;
-    float d = 133.3418;
+    float a = -0.0012;
+    float b = 0.0846;
+    float c = -3.5111;
+    float d = 113.3038;
 
 
 
@@ -90,10 +91,10 @@ int rw_pwm(float rpm){
     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
   }
   else if(rpm<-10){
-    float a = -0.0007;
-    float b = -0.0504;
-    float c = -2.8787;
-    float d = 75.7313;
+    float a = -0.0002;
+    float b = -0.0233;
+    float c = -2.5526;
+    float d = 77.9788;
     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
   }else{
     pwm=90;
@@ -103,10 +104,10 @@ int rw_pwm(float rpm){
 int lw_pwm(float rpm){
   int pwm;
   if(rpm>10){
-    const float a = 0.0001;
-    const float b = -0.0160;
-    const float c = 0.1543;
-    const float d = 50.2928;
+    float a = -0.0004;
+    float b = 0.0312;
+    float c = -2.4746;
+    float d = 109.1201;
 
 
 
@@ -115,10 +116,10 @@ int lw_pwm(float rpm){
     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
   }
   else if(rpm<-10){
-    float a = -0.0008;
-    float b = -0.0693;
-    float c = -3.478;
-    float d = 69.9419;
+    float a = -0.0003;
+    float b = -0.0287;
+    float c = -2.6438;
+    float d = 75.6338;
 
         pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
   }else{
@@ -158,17 +159,20 @@ void subscription_callback(const void *msgin) {
   digitalWrite(LED_PIN, (msg->linear.x == 0) ? HIGH : LOW);
 
 }
-// void subscription_callback2(const void *msgin) {
-//   // Your callback logic for the second subscriber
-//    const std_msgs__msg__Int32 * msg2 = (const std_msgs__msg__Int32 *)msgin;
-//    int pen_mode=msg2-> data;
-//    if(pen_mode==1){
-//     int pen_pwm=20;
-//     servo_pen_mode.write(pen_pwm);
+void subscription_callback2(const void *msgin) {
+  // Your callback logic for the second subscriber
+   const std_msgs__msg__Bool * msg_bool = (const std_msgs__msg__Bool *)msgin;
+   bool pen_mode=msg_bool-> data;
+   if(pen_mode==true){
+    int pen_down=128;  //pen down
+    servo_pen_mode.write(pen_down);
 
-//    }
+   }else if(pen_mode==false){
+    int pen_up=165;
+    servo_pen_mode.write(pen_up);
+   }
   
-// }
+}
 
   
   
@@ -183,44 +187,47 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);  
   
-  delay(2000);
+  // delay(2000);
 
   allocator = rcl_get_default_allocator();
 
    //create init_options
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 
+
+
   // create node
-  RCCHECK(rclc_node_init_default(&node, "bot1_node", "", &support));
+  RCCHECK(rclc_node_init_default(&node, "bot2_node", "", &support));
 
   // create subscriber
   RCCHECK(rclc_subscription_init_default(
     &subscriber,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
-    "/cmd_vel/bot1"));
+    "/cmd_vel/bot2"));
 
-  // RCCHECK(rclc_subscription_init_default(
-  // &subscriber2,
-  // &node,
-  // ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-  // "/pen_pose"));
+  RCCHECK(rclc_subscription_init_default(
+    &subscriber2,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),
+    "/pen2_down"));
 
 
     
 
   // create executor
 
-  RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
+  RCCHECK(rclc_executor_init(&executor, &support.context, 2, &allocator));
+ 
   
   RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &msg, &subscription_callback, ON_NEW_DATA));
-  // RCCHECK(rclc_executor_add_subscription(&executor, &subscriber2, &msg2, &subscription_callback2, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &subscriber2, &msg_bool, &subscription_callback2, ON_NEW_DATA));
 
 
 }
 
 void loop() {
-  delay(100);
+  // delay(100);
   RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
   // delay(100);
 
