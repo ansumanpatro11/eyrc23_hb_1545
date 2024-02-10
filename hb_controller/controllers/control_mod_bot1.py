@@ -64,6 +64,8 @@ class HBController(Node):
         self.fw_pub = self.create_publisher(Wrench, '/hb_bot_1/rear_wheel_force', 10)
 
         self.vel_pub= self.create_publisher(Twist,'/cmd_vel/bot1',10)
+        
+        
 
 
         # self.pen_mode= self.create_publisher(Int32,'/pen_mode',10)
@@ -76,8 +78,8 @@ class HBController(Node):
         self.ka = 0.04  # Proportional gain for angular control
         # dictionary for pid constants
         
-        self.pid_const_linear={'Kp':0.15,'Ki':0.0,'Kd':0.0}
-        self.pid_const_angular={'Kp':2,'Ki':0.1,'Kd':1.5}
+        self.pid_const_linear={'Kp':0.25,'Ki':0.0,'Kd':0.0}
+        self.pid_const_angular={'Kp':8,'Ki':0.08,'Kd':0.000}
         self.intg_const={'linear':0.0,'angular':0.0}
         self.last_error_const={'linear':0.0,'angular':0.0}
         self.i=0
@@ -101,12 +103,12 @@ class HBController(Node):
         self.bot_1_theta = 0.0
 
         #Similar to this you can create subscribers for hb_bot_2 and hb_bot_3
-        self.subscription = self.create_subscription(
-            Goal,  
-            'hb_bot_1/goal',  
-            self.goalCallBack,  # Callback function to handle received messages
-            10  # QoS profile, here it's 10 which means a buffer size of 10 messages
-        ) 
+        # self.subscription = self.create_subscription(
+        #     Goal,  
+        #     'hb_bot_1/goal',  
+        #     self.goalCallBack,  # Callback function to handle received messages
+        #     10  # QoS profile, here it's 10 which means a buffer size of 10 messages
+        # ) 
 
         # self.subscription  # Prevent unused variable warning
 
@@ -196,7 +198,7 @@ def main(args=None):
             
                        
             distance_error = math.sqrt(math.pow((x_goal - hb_controller.hb_x), 2) + math.pow((y_goal - hb_controller.hb_y), 2))
-            tolerance_dist = 6
+            tolerance_dist = 5
             tolerance_theta = 0.5
             
             e_theta_rframe = e_theta
@@ -217,11 +219,11 @@ def main(args=None):
             # print(f"{hb_controller.hb_x},{hb_controller.hb_y},at goal{x_goal},{y_goal}")
                 
             # print(f"e_x_rframe={e_x_rframe},e_y_rframe={e_y_rframe},e_theta={e_theta_rframe},at goal{x_goal},{y_goal}")
-            # if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.5 and hb_controller.i==0:
+            if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.5 and hb_controller.i==0:
                 
-            #     hb_controller.pen_bool_msg.data=True
-            #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-            #     time.sleep(1)
+                hb_controller.pen_bool_msg.data=True
+                hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+                time.sleep(1)
             
             if (abs(e_x_rframe))> tolerance_dist or (abs(e_y_rframe))>tolerance_dist or (abs(hb_controller.getangle(e_theta)))>0.5:
                 fw_vel_x, rw_vel_x, lw_vel_x = inverse_kinematics(vel_x, vel_y, vel_w)
@@ -316,10 +318,10 @@ def main(args=None):
                     
                     
             
-                # if(hb_controller.i==len(hb_controller.bot_1_x)):
-                #     hb_controller.pen_bool_msg.data=False
-                #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-                #     time.sleep(1)
+                if(hb_controller.i==len(hb_controller.bot_1_x)):
+                    hb_controller.pen_bool_msg.data=False
+                    hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+                    time.sleep(1)
                    
          
             # publishing to twist

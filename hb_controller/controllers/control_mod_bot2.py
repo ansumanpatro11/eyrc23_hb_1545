@@ -44,7 +44,7 @@ from goals import *
 
 class HBController(Node):
     def __init__(self):
-        super().__init__('hb_controller_2')
+        super().__init__('hb_controller_3')
     
         # Initialise the required variables
         # self.bot_2_x = [200,225,250,275,300,325,350]
@@ -74,12 +74,8 @@ class HBController(Node):
         # self.kp = 0.4  # Proportional gain for position control
         self.ka = 0.04  # Proportional gain for angular control
         # dictionary for pid constants
-        
-        
-        
-        
-        self.pid_const_linear={'Kp':0.23,'Ki':0.00,'Kd':0.18}
-        self.pid_const_angular={'Kp':1.2,'Ki':0.000,'Kd':0.8}
+        self.pid_const_linear={'Kp':0.23,'Ki':0.00,'Kd':0.001}
+        self.pid_const_angular={'Kp':1.5,'Ki':0.2,'Kd':0.5}
         self.intg_const={'linear':0.0,'angular':0.0}
         self.last_error_const={'linear':0.0,'angular':0.0}
         self.i=0
@@ -95,14 +91,14 @@ class HBController(Node):
         
         # self.msg_x=
         # self.msg_y=
-        # self.bot_2_x = [300,400,300,300]
+        # self.bot_2_x = [100,200,200,100]
         # self.bot_2_y = [100,100,200,100]
         
         self.bot_2_x,self.bot_2_y=bot_2_goals(self.bot_2_x,self.bot_2_y)
         
         self.bot_2_theta = 0.0
 
-        #Similar to this you can create subscribers for hb_bot_2 and hb_bot_3
+        #Similar to this you can create subscribers for hb_bot_2 and hb_bot_2
         self.subscription = self.create_subscription(
             Goal,  
             'hb_bot_2/goal',  
@@ -162,7 +158,6 @@ class HBController(Node):
     def getangle(self,theta):
         if theta>3.14:
             theta=theta-2*math.pi
-            
         elif theta<-3.14:
             theta=theta+2*math.pi
         return theta
@@ -198,7 +193,7 @@ def main(args=None):
             
                        
             distance_error = math.sqrt(math.pow((x_goal - hb_controller.hb_x), 2) + math.pow((y_goal - hb_controller.hb_y), 2))
-            tolerance_dist = 4
+            tolerance_dist = 6
             tolerance_theta = 0.5
             
             e_theta_rframe = e_theta
@@ -219,11 +214,11 @@ def main(args=None):
             # print(f"{hb_controller.hb_x},{hb_controller.hb_y},at goal{x_goal},{y_goal}")
                 
             # print(f"e_x_rframe={e_x_rframe},e_y_rframe={e_y_rframe},e_theta={e_theta_rframe},at goal{x_goal},{y_goal}")
-            # if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.5 and hb_controller.i==0:
+            if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.5 and hb_controller.i==0:
                 
-            #     hb_controller.pen_bool_msg.data=True
-            #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-            #     time.sleep(2)
+                hb_controller.pen_bool_msg.data=True
+                hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+                time.sleep(3)
             if (abs(e_x_rframe))> tolerance_dist or (abs(e_y_rframe))>tolerance_dist or (abs(hb_controller.getangle(e_theta)))>0.5:
                 fw_vel_x, rw_vel_x, lw_vel_x = inverse_kinematics(vel_x, vel_y, vel_w)
                 
@@ -232,23 +227,23 @@ def main(args=None):
                 print(f'fw_vel_x={fw_vel_x},lw_vel_x={lw_vel_x}rw_vel_x ={rw_vel_x}')
                 # fw_vel_x, rw_vel_x, lw_vel_x=hb_controller.smallRPM(1.2,fw_vel_x,rw_vel_x,lw_vel_x)
                 fw_vel_x, rw_vel_x, lw_vel_x=clip_wheel_vel(fw_vel_x,rw_vel_x,lw_vel_x)
-                if fw_vel_x<-2.5:
-                    fw_vel_x=map_vel(fw_vel_x,-40,-2.5,-40,-11)
-                elif fw_vel_x>2.5:
-                    fw_vel_x=map_vel(fw_vel_x,2.5,40,11,40)
-                if rw_vel_x<-2.5:
-                    rw_vel_x=map_vel(rw_vel_x,-40,-2.5,-40,-11)
-                elif rw_vel_x>2.5:
-                    rw_vel_x=map_vel(rw_vel_x,2.5,40,11,40)
-                if lw_vel_x<-2.5:
-                    lw_vel_x=map_vel(lw_vel_x,-40,-2.5,-40,-11)
-                elif lw_vel_x>2.5:
-                    lw_vel_x=map_vel(lw_vel_x,2.5,40,11,40)
+                if fw_vel_x<-5:
+                    fw_vel_x=map_vel(fw_vel_x,-40,-5,-40,-11)
+                elif fw_vel_x>5:
+                    fw_vel_x=map_vel(fw_vel_x,5,40,11,40)
+                if rw_vel_x<-3:
+                    rw_vel_x=map_vel(rw_vel_x,-40,-3,-40,-11)
+                elif rw_vel_x>3:
+                    rw_vel_x=map_vel(rw_vel_x,3,40,11,40)
+                if lw_vel_x<-5:
+                    lw_vel_x=map_vel(lw_vel_x,-40,-5,-40,-11)
+                elif lw_vel_x>5:
+                    lw_vel_x=map_vel(lw_vel_x,5,40,11,40)
                 
                 
                 # max_=max(abs(fw_vel_x),abs(rw_vel_x),abs(lw_vel_x))
                 # min_=min(abs(fw_vel_x),abs(rw_vel_x),abs(lw_vel_x))
-                # fw_vel_x= hb_controller.map_vel(fw_vel_x,min_,max_,12.5,2.50)
+                # fw_vel_x= hb_controller.map_vel(fw_vel_x,min_,max_,15,50)
                 # rw_vel_x= hb_controller.map_vel(rw_vel_x,min_,max_,15,50)
                 # lw_vel_x= hb_controller.map_vel(lw_vel_x,min_,max_,15,50)
                 
@@ -268,7 +263,7 @@ def main(args=None):
                 
                 hb_controller.vel.linear.x=fw_vel_x
                 hb_controller.vel.linear.y=lw_vel_x
-                hb_controller.vel.linear.z=rw_vel_x
+                hb_controller.vel.linear.z=0.994*rw_vel_x
                 hb_controller.vel_pub.publish(hb_controller.vel)
                 print("running")
                 
@@ -316,10 +311,10 @@ def main(args=None):
                     
                     
             
-                # if(hb_controller.i==len(hb_controller.bot_2_x)):
-                #     hb_controller.pen_bool.data=False
-                #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-                #     time.sleep(1)
+                if(hb_controller.i==len(hb_controller.bot_2_x)-1):
+                    hb_controller.pen_bool_msg.data=False
+                    hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+                    time.sleep(1)
                    
          
             # publishing to twist
