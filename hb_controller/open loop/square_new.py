@@ -15,7 +15,7 @@ class HBController(Node):
         self.lw_pub = self.create_publisher(Wrench, '/hb_bot_1/left_wheel_force', 10)
         self.rw_pub = self.create_publisher(Wrench, '/hb_bot_1/right_wheel_force', 10)
         self.fw_pub = self.create_publisher(Wrench, '/hb_bot_1/rear_wheel_force', 10)
-        self.vel_pub=self.create_publisher(Twist,'/cmd_vel/bot3',10)
+        self.vel_pub=self.create_publisher(Twist,'/cmd_vel/bot1',10)
                 
         self.rw_msg = Wrench()
         self.lw_msg = Wrench()
@@ -91,13 +91,13 @@ def main(args=None):
     while rclpy.ok:
         
         if node.count==0:
-            node.move_up(18.0)
+            node.move_up(23.0)
         elif node.count==1:
-            node.move_left(5,18.0)
+            node.move_left(5,23.0)
         elif node.count==2:
-            node.move_down(5,18.0)
+            node.move_down(5,23.0)
         elif node.count==3:
-            node.move_right(5,18.0)
+            node.move_right(5,23.0)
         elif node.count==4:
             node.stop(5)
         # node.publish_velocities()
