@@ -145,7 +145,44 @@ class HBController(Node):
         last_error = error
         
         return balance
-
+    def fw_pwm(self,rpm):
+        pwm=0
+     
+        if rpm>10:
+            d={'a':0.0002,'b':-0.0185,'c':-1.3463,'d':103.2878}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        elif rpm<-10:
+            d={'a':-0.0001,'b':-0.0152,'c':-2.2642,'d':79.1319}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        else:
+            pwm=90.0
+        return pwm
+    
+    def lw_pwm(self,rpm):
+        pwm=0
+     
+        if rpm>10:
+            d={'a':-0.0004,'b':0.0312,'c':-2.4746,'d':109.1201}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        elif rpm<-10:
+            d={'a':-0.0003,'b':-0.0287,'c':-2.6438,'d':75.6338}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        else:
+            pwm=90.0
+        return pwm
+          
+    def rw_pwm(self,rpm):
+        pwm=0
+     
+        if rpm>10:
+            d={'a':-0.0012,'b':0.0846,'c':-3.5111,'d':113.3038}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        elif rpm<-10:
+            d={'a':-0.0002,'b':-0.0233,'c':-2.5526,'d':77.9788}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        else:
+            pwm=90.0
+        return pwm
 
     def getAngVel(self,error, const, threshold_angle):
             ang_vel=0
@@ -220,11 +257,11 @@ def main(args=None):
             # print(f"{hb_controller.hb_x},{hb_controller.hb_y},at goal{x_goal},{y_goal}")
                 
             # print(f"e_x_rframe={e_x_rframe},e_y_rframe={e_y_rframe},e_theta={e_theta_rframe},at goal{x_goal},{y_goal}")
-            if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.55 and hb_controller.i==0:
+            # if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.55 and hb_controller.i==0:
                 
-                hb_controller.pen_bool_msg.data=True
-                hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-                time.sleep(2)
+            #     hb_controller.pen_bool_msg.data=True
+            #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+            #     time.sleep(2)
             if (abs(e_x_rframe))> tolerance_dist or (abs(e_y_rframe))>tolerance_dist or (abs(hb_controller.getangle(e_theta)))>0.55:
                 fw_vel_x, rw_vel_x, lw_vel_x = inverse_kinematics(vel_x, vel_y, vel_w)
                 
@@ -245,7 +282,9 @@ def main(args=None):
                     lw_vel_x=map_vel(lw_vel_x,-40,-3,-40,-11)
                 elif lw_vel_x>3:
                     lw_vel_x=map_vel(lw_vel_x,3,40,11,40)
-                
+                fw_vel_x=hb_controller.fw_pwm(fw_vel_x)
+                lw_vel_x=hb_controller.lw_pwm(lw_vel_x)
+                rw_vel_x=hb_controller.rw_pwm(rw_vel_x)
                 
                 # max_=max(abs(fw_vel_x),abs(rw_vel_x),abs(lw_vel_x))
                 # min_=min(abs(fw_vel_x),abs(rw_vel_x),abs(lw_vel_x))
@@ -267,9 +306,9 @@ def main(args=None):
                 # hb_controller.lw_pub.publish(hb_controller.lw_msg) 
                 # hb_controller.rw_pub.publish(hb_controller.rw_msg)
                 
-                hb_controller.vel.linear.x=fw_vel_x
-                hb_controller.vel.linear.y=lw_vel_x
-                hb_controller.vel.linear.z=rw_vel_x
+                hb_controller.vel.linear.x=float(fw_vel_x)
+                hb_controller.vel.linear.y=float(lw_vel_x)
+                hb_controller.vel.linear.z=float(rw_vel_x)
                 hb_controller.vel_pub.publish(hb_controller.vel)
                 print("running")
                 
@@ -281,9 +320,9 @@ def main(args=None):
                 
                 # Stop the robot by setting wheel forces to zero if goal is reached
              
-                hb_controller.vel.linear.x = 0.0
-                hb_controller.vel.linear.y = 0.0
-                hb_controller.vel.linear.z = 0.0
+                hb_controller.vel.linear.x = 90.0
+                hb_controller.vel.linear.y = 90.0
+                hb_controller.vel.linear.z = 90.0
                 
                 # # hb_controller.fw_msg.force.y = 0.0
                 # # hb_controller.rw_msg.force.y = 0.0
@@ -306,9 +345,9 @@ def main(args=None):
                 hb_controller.i+=1
                 if hb_controller.i==len(hb_controller.bot_2_x):
                     # time.sleep(2)
-                    hb_controller.vel.linear.x = 0.0
-                    hb_controller.vel.linear.y = 0.0
-                    hb_controller.vel.linear.z=0.0  
+                    hb_controller.vel.linear.x = 90.0
+                    hb_controller.vel.linear.y = 90.0
+                    hb_controller.vel.linear.z=90.0  
                     # hb_controller.pen_bool_msg.data=False
                     # hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)                 
                     hb_controller.vel_pub.publish(hb_controller.vel)
@@ -317,10 +356,10 @@ def main(args=None):
                     
                     
             
-                if(hb_controller.i==40):
-                    hb_controller.pen_bool_msg.data=False
-                    hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-                    time.sleep(1)
+                # if(hb_controller.i==40):
+                #     hb_controller.pen_bool_msg.data=False
+                #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+                #     time.sleep(1)
                    
          
             # publishing to twist

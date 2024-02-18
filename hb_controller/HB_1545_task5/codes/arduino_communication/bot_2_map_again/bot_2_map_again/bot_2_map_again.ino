@@ -53,81 +53,81 @@ void error_loop(){
   }
 }
 
-int fw_pwm(float rpm){
-  int pwm;
-  if(rpm>10){
+// int fw_pwm(float rpm){
+//   int pwm;
+//   if(rpm>10){
 
-    //0 t0 90 clockwise
-    float a = 0.0002;
-    float b = -0.0185;
-    float c = -1.3463;
-    float d = 103.2878;
+//     //0 t0 90 clockwise
+//     float a = 0.0002;
+//     float b = -0.0185;
+//     float c = -1.3463;
+//     float d = 103.2878;
 
-    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
-  }
-  else if(rpm<-10){
-    //90 to 180 anti-clockwise
-    float a = -0.0001;
-    float b = -0.0152;
-    float c = -2.2642;
-    float d = 79.1319;
+//     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+//   }
+//   else if(rpm<-10){
+//     //90 to 180 anti-clockwise
+//     float a = -0.0001;
+//     float b = -0.0152;
+//     float c = -2.2642;
+//     float d = 79.1319;
 
-    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
-  }else{
-    pwm=90;
-  }
-  return pwm;
-}
-int rw_pwm(float rpm){
-  int pwm;
-  if(rpm>10){
-    float a = -0.0012;
-    float b = 0.0846;
-    float c = -3.5111;
-    float d = 113.3038;
-
-
-
-
-    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
-  }
-  else if(rpm<-10){
-    float a = -0.0002;
-    float b = -0.0233;
-    float c = -2.5526;
-    float d = 77.9788;
-    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
-  }else{
-    pwm=90;
-  }
-  return pwm;
-}
-int lw_pwm(float rpm){
-  int pwm;
-  if(rpm>10){
-    float a = -0.0004;
-    float b = 0.0312;
-    float c = -2.4746;
-    float d = 109.1201;
+//     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+//   }else{
+//     pwm=90;
+//   }
+//   return pwm;
+// }
+// int rw_pwm(float rpm){
+//   int pwm;
+//   if(rpm>10){
+//     float a = -0.0012;
+//     float b = 0.0846;
+//     float c = -3.5111;
+//     float d = 113.3038;
 
 
 
 
+//     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+//   }
+//   else if(rpm<-10){
+//     float a = -0.0002;
+//     float b = -0.0233;
+//     float c = -2.5526;
+//     float d = 77.9788;
+//     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+//   }else{
+//     pwm=90;
+//   }
+//   return pwm;
+// }
+// int lw_pwm(float rpm){
+//   int pwm;
+//   if(rpm>10){
+//     float a = -0.0004;
+//     float b = 0.0312;
+//     float c = -2.4746;
+//     float d = 109.1201;
 
-    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
-  }
-  else if(rpm<-10){
-    float a = -0.0003;
-    float b = -0.0287;
-    float c = -2.6438;
-    float d = 75.6338;
 
-        pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
-  }else{
-    pwm=90;
-  }
-  return pwm;
-}
+
+
+
+//     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+//   }
+//   else if(rpm<-10){
+//     float a = -0.0003;
+//     float b = -0.0287;
+//     float c = -2.6438;
+//     float d = 75.6338;
+
+//         pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+//   }else{
+//     pwm=90;
+//   }
+//   return pwm;
+// }
 //twist message cb
 void subscription_callback(const void *msgin) {
   const geometry_msgs__msg__Twist * msg = (const geometry_msgs__msg__Twist *)msgin;
@@ -146,9 +146,9 @@ void subscription_callback(const void *msgin) {
   // Serial.println(position_rw);
 
 
-  vel_fw=fw_pwm(vel_fw);
-  vel_rw=rw_pwm(vel_rw);
-  vel_lw=lw_pwm(vel_lw);
+  // vel_fw=fw_pwm(vel_fw);
+  // vel_rw=rw_pwm(vel_rw);
+  // vel_lw=lw_pwm(vel_lw);
  
   
   // Serial.println(position_fw);
@@ -201,13 +201,13 @@ void setup() {
   RCCHECK(rclc_node_init_default(&node, "bot2_node", "", &support));
 
   // create subscriber
-  RCCHECK(rclc_subscription_init_default(
+  RCCHECK(rclc_subscription_init_best_effort(
     &subscriber,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
     "/cmd_vel/bot2"));
 
-  RCCHECK(rclc_subscription_init_default(
+  RCCHECK(rclc_subscription_init_best_effort(
     &subscriber2,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),

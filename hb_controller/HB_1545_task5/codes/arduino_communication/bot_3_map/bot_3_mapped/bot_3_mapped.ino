@@ -53,81 +53,81 @@ void error_loop(){
   }
 }
 
-int fw_pwm(float rpm){
-  int pwm;
-  if(rpm>10){
+// int fw_pwm(float rpm){
+//   int pwm;
+//   if(rpm>10){
 
-    //0 t0 90 clockwise
-    const float a = -0.000;
-    const float b = 0.0001;
-    const float c = -1.6928;
-    const float d = 102.1493;
+//     //0 t0 90 clockwise
+//     const float a = -0.000;
+//     const float b = 0.0001;
+//     const float c = -1.6928;
+//     const float d = 102.1493;
 
-    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
-  }
-  else if(rpm<-10){
-    //90 to 180 anti-clockwise
-    const float a = -0.0006;
-    const float b = -0.0440;
-    const float c = -2.9334;
-    const float d = 75.5371;
+//     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+//   }
+//   else if(rpm<-10){
+//     //90 to 180 anti-clockwise
+//     const float a = -0.0006;
+//     const float b = -0.0440;
+//     const float c = -2.9334;
+//     const float d = 75.5371;
 
-    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
-  }else{
-    pwm=90;
-  }
-  return pwm;
-}
-int rw_pwm(float rpm){
-  int pwm;
-  if(rpm>10){
-    const float a = -0.0001;
-    const float b = 0.0103;
-    const float c = -2.0183;
-    const float d = 104.8149;
-
-
-
-
-    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
-  }
-  else if(rpm<-10){
-    const float a = -0.0003;
-    const float b = -0.0184;
-    const float c = -2.1465;
-    const float d = 81.1205;
-
-    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
-  }else{
-    pwm=90;
-  }
-  return pwm;
-}
-int lw_pwm(float rpm){
-  int pwm;
-  if(rpm>10){
-    const float a = 0.0001;
-    const float b = -0.0132;
-    const float c = -1.4753;
-    const float d = 101.0865;
+//     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+//   }else{
+//     pwm=90;
+//   }
+//   return pwm;
+// }
+// int rw_pwm(float rpm){
+//   int pwm;
+//   if(rpm>10){
+//     const float a = -0.0001;
+//     const float b = 0.0103;
+//     const float c = -2.0183;
+//     const float d = 104.8149;
 
 
 
 
+//     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+//   }
+//   else if(rpm<-10){
+//     const float a = -0.0003;
+//     const float b = -0.0184;
+//     const float c = -2.1465;
+//     const float d = 81.1205;
 
-    pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
-  }
-  else if(rpm<-10){
-    const float a = 0.0003;
-    const float b = 0.0243;
-    const float c = -1.1821;
-    const float d = 87.1315;
-        pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
-  }else{
-    pwm=90;
-  }
-  return pwm;
-}
+//     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+//   }else{
+//     pwm=90;
+//   }
+//   return pwm;
+// }
+// int lw_pwm(float rpm){
+//   int pwm;
+//   if(rpm>10){
+//     const float a = 0.0001;
+//     const float b = -0.0132;
+//     const float c = -1.4753;
+//     const float d = 101.0865;
+
+
+
+
+
+//     pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+//   }
+//   else if(rpm<-10){
+//     const float a = 0.0003;
+//     const float b = 0.0243;
+//     const float c = -1.1821;
+//     const float d = 87.1315;
+//         pwm = int(a * pow(rpm, 3) + b * pow(rpm, 2) + c * rpm + d);
+//   }else{
+//     pwm=90;
+//   }
+//   return pwm;
+// }
 //twist message cb
 void subscription_callback(const void *msgin) {
   const geometry_msgs__msg__Twist * msg = (const geometry_msgs__msg__Twist *)msgin;
@@ -146,9 +146,9 @@ void subscription_callback(const void *msgin) {
   // Serial.println(position_rw);
 
 
-  vel_fw=fw_pwm(vel_fw);
-  vel_rw=rw_pwm(vel_rw);
-  vel_lw=lw_pwm(vel_lw);
+  // vel_fw=fw_pwm(vel_fw);
+  // vel_rw=rw_pwm(vel_rw);
+  // vel_lw=lw_pwm(vel_lw);
  
   
   // Serial.println(position_fw);
@@ -199,13 +199,13 @@ void setup() {
   RCCHECK(rclc_node_init_default(&node, "bot3_node", "", &support));
 
   // create subscriber
-  RCCHECK(rclc_subscription_init_default(
+  RCCHECK(rclc_subscription_init_best_effort(
     &subscriber,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
     "/cmd_vel/bot3"));
 
-  RCCHECK(rclc_subscription_init_default(
+  RCCHECK(rclc_subscription_init_best_effort(
     &subscriber2,
     &node,
     ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Bool),

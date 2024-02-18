@@ -145,6 +145,44 @@ class HBController(Node):
 
         return balance
 
+    def fw_pwm(self,rpm):
+        pwm=0.0
+     
+        if rpm>10:
+            d={'a':-0.000,'b':0.0001,'c':-1.6928,'d':102.1493}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        elif rpm<-10:
+            d={'a':-0.0006,'b':-0.0440,'c':-2.9334,'d':75.5371}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        else:
+            pwm=90.0
+        return pwm
+    
+    def lw_pwm(self,rpm):
+        pwm=0.0
+     
+        if rpm>10:
+            d={'a':0.0001,'b':-0.0132,'c':-1.4753,'d':101.0865}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        elif rpm<-10:
+            d={'a':0.0003,'b':0.0243,'c':-1.1821,'d':87.1315}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        else:
+            pwm=90.0
+        return pwm
+          
+    def rw_pwm(self,rpm):
+        pwm=0.0
+     
+        if rpm>10:
+            d={'a':-0.0001,'b':0.0103,'c':-2.0183,'d':104.8149}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        elif rpm<-10:
+            d={'a':-0.0003,'b':-0.0184,'c':-2.1465,'d':81.1205}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        else:
+            pwm=90.0
+        return pwm
 
     def getAngVel(self,error, const, threshold_angle):
             ang_vel=0
@@ -250,6 +288,9 @@ def main(args=None):
                     lw_vel_x=map_vel(lw_vel_x,-40,-2.5,-40,-11)
                 elif lw_vel_x>2.5:
                     lw_vel_x=map_vel(lw_vel_x,2.5,40,11,40)
+                fw_vel_x=hb_controller.fw_pwm(fw_vel_x)
+                lw_vel_x=hb_controller.lw_pwm(lw_vel_x)
+                rw_vel_x=hb_controller.rw_pwm(rw_vel_x)
                 
                 
                 # max_=max(abs(fw_vel_x),abs(rw_vel_x),abs(lw_vel_x))
@@ -272,9 +313,9 @@ def main(args=None):
                 # hb_controller.lw_pub.publish(hb_controller.lw_msg) 
                 # hb_controller.rw_pub.publish(hb_controller.rw_msg)
                 
-                hb_controller.vel.linear.x=fw_vel_x
-                hb_controller.vel.linear.y=lw_vel_x
-                hb_controller.vel.linear.z=rw_vel_x
+                hb_controller.vel.linear.x=float(fw_vel_x)
+                hb_controller.vel.linear.y=float(lw_vel_x)
+                hb_controller.vel.linear.z=float(rw_vel_x)
                 hb_controller.vel_pub.publish(hb_controller.vel)
                 print("running")
                 
@@ -286,9 +327,9 @@ def main(args=None):
                 
                 # Stop the robot by setting wheel forces to zero if goal is reached
              
-                hb_controller.vel.linear.x = 0.0
-                hb_controller.vel.linear.y = 0.0
-                hb_controller.vel.linear.z = 0.0
+                hb_controller.vel.linear.x = 90.0
+                hb_controller.vel.linear.y = 90.0
+                hb_controller.vel.linear.z = 90.0
                 
                 # # hb_controller.fw_msg.force.y = 0.0
                 # # hb_controller.rw_msg.force.y = 0.0
@@ -311,9 +352,9 @@ def main(args=None):
                 hb_controller.i+=1
                 if hb_controller.i==len(hb_controller.bot_3_x):
                     # time.sleep(2)
-                    hb_controller.vel.linear.x = 0.0
-                    hb_controller.vel.linear.y = 0.0
-                    hb_controller.vel.linear.z=0.0  
+                    hb_controller.vel.linear.x = 90.0
+                    hb_controller.vel.linear.y = 90.0
+                    hb_controller.vel.linear.z= 90.0  
                     # hb_controller.pen_bool_msg.data=False
                     # hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)                 
                     hb_controller.vel_pub.publish(hb_controller.vel)
@@ -323,12 +364,12 @@ def main(args=None):
                     
                     
             
-                if(hb_controller.i==40):
-                    hb_controller.pen_bool_msg.data=False
-                    hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-                    # stop_flag_service = hb_controller.create_service(Empty, 'Stop_Flag', hb_controller.stop_flag_callback)
+                # if(hb_controller.i==40):
+                #     hb_controller.pen_bool_msg.data=False
+                #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+                #     # stop_flag_service = hb_controller.create_service(Empty, 'Stop_Flag', hb_controller.stop_flag_callback)
 
-                    time.sleep(1)
+                #     time.sleep(1)
                    
          
             # publishing to twist

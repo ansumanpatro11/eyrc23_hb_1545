@@ -19,7 +19,7 @@
 
 
 # Team ID:		[ 1545 ]
-# Author List:		[ Names of team members worked on this file separated by Comma: Name1, Name2, ... ]
+# Author List:		[ Ansuman, Amit, Abhishek ]
 # Filename:		controller.py
 # Functions:
 #			[ Comma separated list of functions in this file ]
@@ -39,7 +39,7 @@ from std_msgs.msg import Int32
 from std_msgs.msg import Bool
 from control_utils import *
 from goals import *
-import feedback_for_fast
+# import feedback_for_fast
 from std_srvs.srv import Empty
 
 # import matplotlib.pyplot as plt          
@@ -143,6 +143,45 @@ class HBController(Node):
 
         return balance
 
+    
+    def fw_pwm(self,rpm):
+        pwm=0
+     
+        if rpm>10:
+            d={'a':-0.0012,'b':0.0923,'c':-3.8639,'d':119.1027}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        elif rpm<-10:
+            d={'a':-0.0006,'b':-0.0478,'c':-2.8861,'d':75.2306}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        else:
+            pwm=90
+        return pwm
+    
+    def lw_pwm(self,rpm):
+        pwm=0
+     
+        if rpm>10:
+            d={'a':-0.0010,'b':0.0837,'c':-3.7968,'d':119.365}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        elif rpm<-10:
+            d={'a':-0.0007,'b':-0.0601,'c':-3.2047,'d':71.6505}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        else:
+            pwm=90
+        return pwm
+          
+    def rw_pwm(self,rpm):
+        pwm=0
+     
+        if rpm>10:
+            d={'a':0.0012,'b':-0.1196,'c':1.1861,'d':85.5759}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        elif rpm<-10:
+            d={'a':-0.0002,'b':-0.0257,'c':-3.0805,'d':69.3717}
+            pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
+        else:
+            pwm=90
+        return pwm
 
     def getAngVel(self,error, const, threshold_angle):
             ang_vel=0
@@ -222,11 +261,11 @@ def main(args=None):
             # print(f"{hb_controller.hb_x},{hb_controller.hb_y},at goal{x_goal},{y_goal}")
                 
             # print(f"e_x_rframe={e_x_rframe},e_y_rframe={e_y_rframe},e_theta={e_theta_rframe},at goal{x_goal},{y_goal}")
-            if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.5 and hb_controller.i==0:
+            # if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.5 and hb_controller.i==0:
                 
-                hb_controller.pen_bool_msg.data=True
-                hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-                time.sleep(1)
+            #     hb_controller.pen_bool_msg.data=True
+            #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+            #     time.sleep(1)
             
             if (abs(e_x_rframe))> tolerance_dist or (abs(e_y_rframe))>tolerance_dist or (abs(hb_controller.getangle(e_theta)))>0.5:
                 fw_vel_x, rw_vel_x, lw_vel_x = inverse_kinematics(vel_x, vel_y, vel_w)
@@ -248,6 +287,10 @@ def main(args=None):
                     lw_vel_x=map_vel(lw_vel_x,-40,-3,-40,-11)
                 elif lw_vel_x>3:
                     lw_vel_x=map_vel(lw_vel_x,3,40,11,40)
+                fw_vel_x=hb_controller.fw_pwm(fw_vel_x)
+                lw_vel_x=hb_controller.lw_pwm(lw_vel_x)
+                rw_vel_x=hb_controller.rw_pwm(rw_vel_x)
+                
                 
                 
                 # max_=max(abs(fw_vel_x),abs(rw_vel_x),abs(lw_vel_x))
@@ -270,9 +313,9 @@ def main(args=None):
                 # hb_controller.lw_pub.publish(hb_controller.lw_msg) 
                 # hb_controller.rw_pub.publish(hb_controller.rw_msg)
                 
-                hb_controller.vel.linear.x=fw_vel_x
-                hb_controller.vel.linear.y=lw_vel_x
-                hb_controller.vel.linear.z=rw_vel_x
+                hb_controller.vel.linear.x=float(fw_vel_x)
+                hb_controller.vel.linear.y=float(lw_vel_x)
+                hb_controller.vel.linear.z=float(rw_vel_x)
                 hb_controller.vel_pub.publish(hb_controller.vel)
                 print("running")
                 
@@ -310,9 +353,9 @@ def main(args=None):
                 hb_controller.i+=1
                 if hb_controller.i==len(hb_controller.bot_1_x):
                     # time.sleep(2)
-                    hb_controller.vel.linear.x = 0.0
-                    hb_controller.vel.linear.y = 0.0
-                    hb_controller.vel.linear.z=0.0  
+                    hb_controller.vel.linear.x = 90.0
+                    hb_controller.vel.linear.y = 90.0
+                    hb_controller.vel.linear.z=90.0 
                     # hb_controller.pen_bool_msg.data=False
                     # hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)                 
                     hb_controller.vel_pub.publish(hb_controller.vel)
@@ -321,12 +364,12 @@ def main(args=None):
                     
                     
             
-                if(hb_controller.i==60):
-                    hb_controller.pen_bool_msg.data=False
-                    hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-                    stop_flag_service = hb_controller.create_service(Empty, 'Stop_Flag', hb_controller.stop_flag_callback)
+                # if(hb_controller.i==60):
+                #     hb_controller.pen_bool_msg.data=False
+                #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+                #     stop_flag_service = hb_controller.create_service(Empty, 'Stop_Flag', hb_controller.stop_flag_callback)
 
-                    time.sleep(1)
+                #     time.sleep(1)
                    
          
             # publishing to twist
