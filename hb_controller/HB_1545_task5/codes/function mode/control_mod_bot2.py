@@ -19,8 +19,8 @@
 
 
 # Team ID:		[ 1545 ]
-# Author List:		[ Ansuman, Amit, Abhishek ]
-# Filename:		controller_bot1.py
+# Author List:		[Ansuman,Amit,Abhishek ]
+# Filename:		controller.py
 # Functions:
 #			[ Comma separated list of functions in this file ]
 # Nodes:		Add your publishing and subscribing node
@@ -38,84 +38,75 @@ from std_msgs.msg import Int32
 from std_msgs.msg import Bool
 from control_utils import *
 from goals import *
-from std_srvs.srv import Empty
-from contours import *
-from contour_goals import *
-from cont_goals import *
-
-
-
-
 
 
 
 class HBController(Node):
     def __init__(self):
-        super().__init__('hb_controller_1')
-        
-        self.bot_1_x=[]
-        self.bot_1_y=[]
+        super().__init__('hb_controller_2')
+    
+      
+        self.bot_2_x=[]
+        self.bot_2_y=[]
+        self.prev_time = time.time()
+
         
         self.hb_x=0.0
         self.hb_y=0.0
         self.hb_theta=0.0
-        self.prev_time = time.time()
-
+        self.pen=False
         
         # Initialze Publisher and Subscriber
 
-        self.vel_pub= self.create_publisher(Twist,'/cmd_vel/bot1',1)
-        self.pen_bool = self.create_publisher(Bool, '/pen1_down_intermediate', 1)
-        self.pen_final=self.create_publisher(Bool,'/pen1_down',1)
-        self.pen_sub=self.create_subscription(Bool,'/all_down',self.pen_callback)
 
-        
-        
-        
-        
+        self.vel_pub= self.create_publisher(Twist,'/cmd_vel/bot2',1)
+        self.pen_bool = self.create_publisher(Bool, '/pen2_down_intermediate', 1)
+        self.pen_final=self.create_publisher(Bool,'/pen2_down',1)
+        self.pen_sub=self.create_subscription(Bool,'/all_down',self.pen_callback,1)
+        self.iter_pub = self.create_publisher(Int32, '/i_2', 1)
 
 
-        self.pen_bool = self.create_publisher(Bool, '/pen1_down', 1)
-        self.iter_pub = self.create_publisher(Int32, '/i_1', 1)
-
+        # self.pen_bool = self.create_publisher(Bool, '/pen2_down', 1)
 
         
-        self.pose_subs = self.create_subscription(Pose2D, '/pen1_pose', self.odometryCb, 1)
+        self.pose_subs = self.create_subscription(Pose2D, '/pen2_pose', self.odometryCb, 1)
         
-    
         
-        self.pid_const_linear={'Kp':0.6,'Ki':0.0,'Kd':0.0000001}
-        self.pid_const_angular={'Kp':2.25,'Ki':0.0,'Kd':0.00007}
+        
+        self.pid_const_linear={'Kp':0.69,'Ki':0.00,'Kd':0.00000001}
+        self.pid_const_angular={'Kp':3.6,'Ki':0,'Kd':0.00001} #without using time at 0.2 theta
         self.intg_const={'linear':0.0,'angular':0.0}
         self.last_error_const={'linear':0.0,'angular':0.0}
         self.i=0
+        self.ctr=0
         self.iter=Int32()
         self.vel=Twist()
         
+        
         self.pen_bool_msg = Bool()
         self.pen_final_msg=Bool()
-        
 
         self.rw_msg = Wrench()
         self.lw_msg = Wrench()
         self.fw_msg = Wrench()
         
-        detected_points_file = "/home/ansuman/eyrc_HB/eyrc23_hb_1545/hb_controller/HB_1545_task5/codes/controller/detected_points.txt"
-
-         
         
-        # self.bot_1_x,self.bot_1_y=goals(self.bot_1_x,self.bot_1_y)
-        image=cv2.imread('/home/ansuman/eyrc_HB/eyrc23_hb_1545/hb_controller/HB_1545_task5/codes/controller/starr.jpeg')
+
+        self.bot_2_x,self.bot_2_y=bot_2_goals(self.bot_2_x,self.bot_2_y)
+        
+        self.bot_2_theta = 0.0
+
         # self.x_dict,self.y_dict=read_detected_points(detected_points_file)
-        # self.bot_1_x=self.x_dict['contour25']
-        # self.bot_1_y=self.y_dict['contour25']
+        # if self.ctr==0:
+        #     self.bot_2_x=self.x_dict['contour24']
+        #     self.bot_2_y=self.y_dict['contour24']
         
-        self.bot_1_x,self.bot_1_y=bot_1_goals(self.bot_1_x,self.bot_1_y)
-        self.bot_1_theta = 0.0
 
-        
+
+        # For maintaining control loop rate.
         self.rate = self.create_rate(100)
 
+    # def goalCallBack(self, msg):     
         
     def pen_callback(self,msg:Bool):
         self.pen=msg.data    
@@ -129,17 +120,13 @@ class HBController(Node):
         
     
     
-    def goalCallBack(self, msg):
-        self.bot_1_x = msg.x
-        self.bot_1_y = msg.y
-        self.bot_1_theta = msg.theta
-        
+    
         
     def pid(self,error, const, intg, last_error):
         self.current_time = time.time()
-    
-    # Calculate time elapsed since last iteration
+
         dt = self.current_time - self.prev_time
+
         prop = error
         intg = error + intg
         diff = error - last_error
@@ -148,20 +135,16 @@ class HBController(Node):
         # update the last error
         last_error = error
         self.prev_time = self.current_time
-
+ 
         return balance
-    
-    
-
-    
     def fw_pwm(self,rpm):
         pwm=0
      
         if rpm>10:
-            d={'a':-0.0012,'b':0.0923,'c':-3.8639,'d':119.1027}
+            d={'a':0.0002,'b':-0.0185,'c':-1.3463,'d':103.2878}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
         elif rpm<-10:
-            d={'a':-0.0006,'b':-0.0478,'c':-2.8861,'d':75.2306}
+            d={'a':-0.0001,'b':-0.0152,'c':-2.2642,'d':79.1319}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
         else:
             pwm=90.0
@@ -171,10 +154,10 @@ class HBController(Node):
         pwm=0
      
         if rpm>10:
-            d={'a':-0.0010,'b':0.0837,'c':-3.7968,'d':119.365}
+            d={'a':-0.0004,'b':0.0312,'c':-2.4746,'d':109.1201}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
         elif rpm<-10:
-            d={'a':-0.0007,'b':-0.0601,'c':-3.2047,'d':71.6505}
+            d={'a':-0.0003,'b':-0.0287,'c':-2.6438,'d':75.6338}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
         else:
             pwm=90.0
@@ -184,10 +167,10 @@ class HBController(Node):
         pwm=0
      
         if rpm>10:
-            d={'a':0.0012,'b':-0.1196,'c':1.1861,'d':85.5759}
+            d={'a':-0.0012,'b':0.0846,'c':-3.5111,'d':113.3038}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
         elif rpm<-10:
-            d={'a':-0.0002,'b':-0.0257,'c':-3.0805,'d':69.3717}
+            d={'a':-0.0002,'b':-0.0233,'c':-2.5526,'d':77.9788}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
         else:
             pwm=90.0
@@ -214,24 +197,19 @@ class HBController(Node):
             theta=theta+2*math.pi
         return theta
          
-    def stop_flag_callback(self, request, response):
-        print("Stop_Flag service invoked")
-        response = Empty()
-        return response     
 
 def main(args=None):
     rclpy.init(args=args)
-    # ff=feedback_for_fast()
+    
     hb_controller = HBController()
     # fig, ax = plt.subplots()
        
     # Main loop
     rclpy.spin_once(hb_controller)
-    
     while rclpy.ok():
-        if hb_controller.i < len(hb_controller.bot_1_x):
-            x_goal=hb_controller.bot_1_x[hb_controller.i]
-            y_goal=500-hb_controller.bot_1_y[hb_controller.i]
+        if hb_controller.i < len(hb_controller.bot_2_x):
+            x_goal=hb_controller.bot_2_x[hb_controller.i]
+            y_goal=hb_controller.bot_2_y[hb_controller.i]
             theta_goal=0.0
                      
             
@@ -244,8 +222,8 @@ def main(args=None):
             
                        
             distance_error = math.sqrt(math.pow((x_goal - hb_controller.hb_x), 2) + math.pow((y_goal - hb_controller.hb_y), 2))
-            tolerance_dist = 5
-            tolerance_theta = 0.36
+            tolerance_dist = 6.5
+            tolerance_theta = 0.35
             
             e_theta_rframe = e_theta
             e_x_rframe = (math.cos(hb_controller.hb_theta)) * (e_x) + (math.sin(hb_controller.hb_theta)) * (e_y)
@@ -262,9 +240,9 @@ def main(args=None):
             
             print(f"e_x={e_x_rframe},e_y={e_y_rframe},e_theta={hb_controller.getangle(e_theta)},at goal{x_goal},{y_goal}")
             
-            # print(f"{hb_controller.hb_x},{hb_controller.hb_y},at goal{x_goal},{y_goal}")
+            
+            if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<tolerance_theta and hb_controller.i==0:
                 
-            if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.55 and hb_controller.i==0:
                 hb_controller.pen_bool_msg.data=True
                 hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
                 time.sleep(1)
@@ -292,11 +270,12 @@ def main(args=None):
                 fw_vel_x=hb_controller.fw_pwm(fw_vel_x)
                 lw_vel_x=hb_controller.lw_pwm(lw_vel_x)
                 rw_vel_x=hb_controller.rw_pwm(rw_vel_x)
-                
+         
 
                 
+                
                 print(f"v={fw_vel_x},{rw_vel_x},{lw_vel_x} at e_err={e_theta}")
-          
+            
                 
                 hb_controller.vel.linear.x=float(fw_vel_x)
                 hb_controller.vel.linear.y=float(lw_vel_x)
@@ -314,10 +293,11 @@ def main(args=None):
                 hb_controller.vel.linear.y = 90.0
                 hb_controller.vel.linear.z = 90.0
                 
-                
+         
                 hb_controller.vel_pub.publish(hb_controller.vel)
-          
+ 
                 print("zero")
+                # time.sleep(1)
                 
                 
                 
@@ -327,33 +307,41 @@ def main(args=None):
                     hb_controller.pen_final.publish(hb_controller.pen_final_msg)
                 
                     hb_controller.i+=1
-                elif hb_controller.i==0 and hb_controller.pen is not True:
-                    hb_controller.vel.linear.x = 0.0
-                    hb_controller.vel.linear.y = 0.0
-                    hb_controller.vel.linear.z=0.0  
-                # time.sleep(1)
                 
-                hb_controller.i+=1
-                hb_controller.iter.data=hb_controller.i
-                hb_controller.iter_pub.publish(hb_controller.iter)
-                if hb_controller.i==len(hb_controller.bot_1_x):
+                    
+                elif hb_controller.i>0:
+                    hb_controller.i+=1
+                    hb_controller.iter.data=hb_controller.i
+                    hb_controller.iter_pub.publish(hb_controller.iter)
+                
+                else:
+                    hb_controller.vel.linear.x = 90.0
+                    hb_controller.vel.linear.y = 90.0
+                    hb_controller.vel.linear.z = 90.0
+                    
+                    
+                    hb_controller.vel_pub.publish(hb_controller.vel)
+                    
+                if hb_controller.i==len(hb_controller.bot_2_x):
                     # time.sleep(2)
                     hb_controller.vel.linear.x = 90.0
                     hb_controller.vel.linear.y = 90.0
-                    hb_controller.vel.linear.z= 90.0 
-                                    
+                    hb_controller.vel.linear.z=90.0  
+                
                     hb_controller.vel_pub.publish(hb_controller.vel)
-                    # time.sleep(0.5)
-                    print("I DID THE JOB ;)")
+                    hb_controller.pen_bool_msg.data=False
+                    hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+                    
+                    
                     time.sleep(500)
+                    
+                        
                     
                     
             
-                # if(hb_controller.i==60):
+                # if(hb_controller.i==len(hb_controller.bot_2_x)):
                 #     hb_controller.pen_bool_msg.data=False
                 #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-                #     stop_flag_service = hb_controller.create_service(Empty, 'Stop_Flag', hb_controller.stop_flag_callback)
-
                 #     time.sleep(1)
                    
          

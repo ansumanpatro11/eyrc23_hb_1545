@@ -39,9 +39,7 @@ from std_msgs.msg import Bool
 from control_utils import *
 from goals import *
 from std_srvs.srv import Empty
-from contours import *
-from contour_goals import *
-from cont_goals import *
+
 
 
 
@@ -60,6 +58,7 @@ class HBController(Node):
         self.hb_y=0.0
         self.hb_theta=0.0
         self.prev_time = time.time()
+        self.pen=False
 
         
         # Initialze Publisher and Subscriber
@@ -67,15 +66,16 @@ class HBController(Node):
         self.vel_pub= self.create_publisher(Twist,'/cmd_vel/bot1',1)
         self.pen_bool = self.create_publisher(Bool, '/pen1_down_intermediate', 1)
         self.pen_final=self.create_publisher(Bool,'/pen1_down',1)
-        self.pen_sub=self.create_subscription(Bool,'/all_down',self.pen_callback)
-
-        
-        
-        
-        
+        self.pen_sub=self.create_subscription(Bool,'/all_down',self.pen_callback,1)
 
 
-        self.pen_bool = self.create_publisher(Bool, '/pen1_down', 1)
+        
+        
+        
+        
+
+
+        # self.pen_bool = self.create_publisher(Bool, '/pen1_down', 1)
         self.iter_pub = self.create_publisher(Int32, '/i_1', 1)
 
 
@@ -104,9 +104,7 @@ class HBController(Node):
 
          
         
-        # self.bot_1_x,self.bot_1_y=goals(self.bot_1_x,self.bot_1_y)
-        image=cv2.imread('/home/ansuman/eyrc_HB/eyrc23_hb_1545/hb_controller/HB_1545_task5/codes/controller/starr.jpeg')
-        # self.x_dict,self.y_dict=read_detected_points(detected_points_file)
+        # # self.bot_1_x,self.bot_1_y=goals(self.bot_1_x,self.bot_1_y)
         # self.bot_1_x=self.x_dict['contour25']
         # self.bot_1_y=self.y_dict['contour25']
         
@@ -126,15 +124,7 @@ class HBController(Node):
         self.hb_x = pose.x
         self.hb_y = pose.y
         self.hb_theta = pose.theta
-        
     
-    
-    def goalCallBack(self, msg):
-        self.bot_1_x = msg.x
-        self.bot_1_y = msg.y
-        self.bot_1_theta = msg.theta
-        
-        
     def pid(self,error, const, intg, last_error):
         self.current_time = time.time()
     
@@ -231,7 +221,7 @@ def main(args=None):
     while rclpy.ok():
         if hb_controller.i < len(hb_controller.bot_1_x):
             x_goal=hb_controller.bot_1_x[hb_controller.i]
-            y_goal=500-hb_controller.bot_1_y[hb_controller.i]
+            y_goal=hb_controller.bot_1_y[hb_controller.i]
             theta_goal=0.0
                      
             
@@ -264,7 +254,7 @@ def main(args=None):
             
             # print(f"{hb_controller.hb_x},{hb_controller.hb_y},at goal{x_goal},{y_goal}")
                 
-            if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.55 and hb_controller.i==0:
+            if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<tolerance_theta and hb_controller.i==0:
                 hb_controller.pen_bool_msg.data=True
                 hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
                 time.sleep(1)
@@ -327,24 +317,35 @@ def main(args=None):
                     hb_controller.pen_final.publish(hb_controller.pen_final_msg)
                 
                     hb_controller.i+=1
-                elif hb_controller.i==0 and hb_controller.pen is not True:
-                    hb_controller.vel.linear.x = 0.0
-                    hb_controller.vel.linear.y = 0.0
-                    hb_controller.vel.linear.z=0.0  
-                # time.sleep(1)
                 
-                hb_controller.i+=1
-                hb_controller.iter.data=hb_controller.i
-                hb_controller.iter_pub.publish(hb_controller.iter)
+                    
+                elif hb_controller.i>0:
+                    hb_controller.i+=1
+                    hb_controller.iter.data=hb_controller.i
+                    hb_controller.iter_pub.publish(hb_controller.iter)
+                
+                else:
+                    hb_controller.vel.linear.x = 90.0
+                    hb_controller.vel.linear.y = 90.0
+                    hb_controller.vel.linear.z = 90.0
+                    
+                    
+                    hb_controller.vel_pub.publish(hb_controller.vel)
+                    
+                
+                    
+                    
                 if hb_controller.i==len(hb_controller.bot_1_x):
                     # time.sleep(2)
                     hb_controller.vel.linear.x = 90.0
                     hb_controller.vel.linear.y = 90.0
-                    hb_controller.vel.linear.z= 90.0 
-                                    
+                    hb_controller.vel.linear.z=90.0  
+                
                     hb_controller.vel_pub.publish(hb_controller.vel)
-                    # time.sleep(0.5)
-                    print("I DID THE JOB ;)")
+                    hb_controller.pen_bool_msg.data=False
+                    hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+                    
+                    
                     time.sleep(500)
                     
                     

@@ -19,7 +19,7 @@
 
 
 # Team ID:		[ 1545 ]
-# Author List:		[ Names of team members worked on this file separated by Comma: Name1, Name2, ... ]
+# Author List:		[Ansuman,Amit,Abhishek ]
 # Filename:		controller.py
 # Functions:
 #			[ Comma separated list of functions in this file ]
@@ -32,26 +32,25 @@ import rclpy
 from rclpy.node import Node
 import time
 import math
-# from tf_transformations import euler_from_quaternion
 from geometry_msgs.msg import Twist, Pose2D, Wrench
 from my_robot_interfaces.msg import Goal   
 from std_msgs.msg import Int32
 from std_msgs.msg import Bool
 from control_utils import *
 from goals import *
-# import matplotlib.pyplot as plt          
+from cont_goals import *
+
 
 
 class HBController(Node):
     def __init__(self):
         super().__init__('hb_controller_2')
     
-        # Initialise the required variables
-        # self.bot_2_x = [200,225,250,275,300,325,350]
-        # self.bot_2_y = [150,150,150,150,150,150,150]
-        # self.bot_2_theta = 0.0
+      
         self.bot_2_x=[]
         self.bot_2_y=[]
+        self.prev_time = time.time()
+
         
         self.hb_x=0.0
         self.hb_y=0.0
@@ -63,56 +62,45 @@ class HBController(Node):
         self.fw_pub = self.create_publisher(Wrench, '/hb_bot_2/rear_wheel_force', 10)
 
         self.vel_pub= self.create_publisher(Twist,'/cmd_vel/bot2',1)
+        self.iter_pub = self.create_publisher(Int32, '/i_2', 1)
 
 
-        # self.pen_mode= self.create_publisher(Int32,'/pen_mode',10)
         self.pen_bool = self.create_publisher(Bool, '/pen2_down', 1)
 
         
         self.pose_subs = self.create_subscription(Pose2D, '/pen2_pose', self.odometryCb, 1)
         
-        # self.kp = 0.4  # Proportional gain for position control
-        self.ka = 0.04  # Proportional gain for angular control
-        # dictionary for pid constants
-        # self.pid_const_linear={'Kp':0.23,'Ki':0.00,'Kd':0.00}
-        # self.pid_const_angular={'Kp':1.5,'Ki':0.05,'Kd':0.95}
-        # self.intg_const={'linear':0.0,'angular':0.0}
-        # self.last_error_const={'linear':0.0,'angular':0.0}
-        # self.i=0
         
-        self.pid_const_linear={'Kp':0.23,'Ki':0.00,'Kd':0.0}
-        self.pid_const_angular={'Kp':1.325,'Ki':0.000,'Kd':0.8}
+        
+        self.pid_const_linear={'Kp':0.69,'Ki':0.00,'Kd':0.00000001}
+        self.pid_const_angular={'Kp':3.6,'Ki':0,'Kd':0.00001} #without using time at 0.2 theta
         self.intg_const={'linear':0.0,'angular':0.0}
         self.last_error_const={'linear':0.0,'angular':0.0}
         self.i=0
-        
+        self.ctr=0
+        self.iter=Int32()
         self.vel=Twist()
         
-        # self.pen_mode_msg=Int32()
+        
         self.pen_bool_msg = Bool()
 
         self.rw_msg = Wrench()
         self.lw_msg = Wrench()
         self.fw_msg = Wrench()
         
-        # self.msg_x=
-        # self.msg_y=
-        # self.bot_2_x = [100,200,200,100]
-        # self.bot_2_y = [100,100,200,100]
         
+        detected_points_file = "/home/ansuman/eyrc_HB/eyrc23_hb_1545/hb_controller/HB_1545_task5/codes/controller/detected_points.txt"
+
         self.bot_2_x,self.bot_2_y=bot_2_goals(self.bot_2_x,self.bot_2_y)
         
         self.bot_2_theta = 0.0
 
-        #Similar to this you can create subscribers for hb_bot_2 and hb_bot_2
-        self.subscription = self.create_subscription(
-            Goal,  
-            'hb_bot_2/goal',  
-            self.goalCallBack,  # Callback function to handle received messages
-            10  # QoS profile, here it's 10 which means a buffer size of 10 messages
-        ) 
+        # self.x_dict,self.y_dict=read_detected_points(detected_points_file)
+        # if self.ctr==0:
+        #     self.bot_2_x=self.x_dict['contour24']
+        #     self.bot_2_y=self.y_dict['contour24']
+        
 
-        # self.subscription  # Prevent unused variable warning
 
         # For maintaining control loop rate.
         self.rate = self.create_rate(100)
@@ -136,14 +124,19 @@ class HBController(Node):
         
         
     def pid(self,error, const, intg, last_error):
+        self.current_time = time.time()
+
+        dt = self.current_time - self.prev_time
+
         prop = error
         intg = error + intg
         diff = error - last_error
         # compute balance
-        balance = const['Kp'] * prop + const['Ki'] * intg + const['Kd'] * diff
+        balance = const['Kp'] * prop + const['Ki'] * intg*dt + const['Kd'] * diff/dt
         # update the last error
         last_error = error
-        
+        self.prev_time = self.current_time
+ 
         return balance
     def fw_pwm(self,rpm):
         pwm=0
@@ -220,13 +213,7 @@ def main(args=None):
             y_goal=hb_controller.bot_2_y[hb_controller.i]
             theta_goal=0.0
                      
-            # ax.plot(hb_controller.path_x, hb_controller.path_y, label='Bot 1 Path', color='blue')
-            # ax.legend()
-            # plt.pause(0.01)
-
-            # print(f"x_g={x_goal}, y_g={y_goal},Q={theta_goal} at i={hb_controller.i}")
             
-            # print(f"x={hb_x}, y={hb_y}, at_q={hb_theta}")
             
             print(hb_controller.hb_x)
             e_x = (x_goal - hb_controller.hb_x)
@@ -237,7 +224,7 @@ def main(args=None):
                        
             distance_error = math.sqrt(math.pow((x_goal - hb_controller.hb_x), 2) + math.pow((y_goal - hb_controller.hb_y), 2))
             tolerance_dist = 6.5
-            tolerance_theta = 0.5
+            tolerance_theta = 0.35
             
             e_theta_rframe = e_theta
             e_x_rframe = (math.cos(hb_controller.hb_theta)) * (e_x) + (math.sin(hb_controller.hb_theta)) * (e_y)
@@ -250,19 +237,17 @@ def main(args=None):
             
             # vel_w = hb_controller.getAngVel(e_theta, hb_controller.ka, tolerance_theta)
             
-            vel_w = hb_controller.getAngVel(e_theta_rframe,hb_controller.pid_const_angular,0.5)
+            vel_w = hb_controller.getAngVel(e_theta_rframe,hb_controller.pid_const_angular,tolerance_theta)
             
             print(f"e_x={e_x_rframe},e_y={e_y_rframe},e_theta={hb_controller.getangle(e_theta)},at goal{x_goal},{y_goal}")
             
-            # print(f"{hb_controller.hb_x},{hb_controller.hb_y},at goal{x_goal},{y_goal}")
-                
-            # print(f"e_x_rframe={e_x_rframe},e_y_rframe={e_y_rframe},e_theta={e_theta_rframe},at goal{x_goal},{y_goal}")
-            # if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.55 and hb_controller.i==0:
+            
+            # if (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<tolerance_theta and hb_controller.i==0:
                 
             #     hb_controller.pen_bool_msg.data=True
             #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
             #     time.sleep(2)
-            if (abs(e_x_rframe))> tolerance_dist or (abs(e_y_rframe))>tolerance_dist or (abs(hb_controller.getangle(e_theta)))>0.55:
+            if (abs(e_x_rframe))> tolerance_dist or (abs(e_y_rframe))>tolerance_dist or (abs(hb_controller.getangle(e_theta)))>tolerance_theta:
                 fw_vel_x, rw_vel_x, lw_vel_x = inverse_kinematics(vel_x, vel_y, vel_w)
                 
                 
@@ -285,26 +270,12 @@ def main(args=None):
                 fw_vel_x=hb_controller.fw_pwm(fw_vel_x)
                 lw_vel_x=hb_controller.lw_pwm(lw_vel_x)
                 rw_vel_x=hb_controller.rw_pwm(rw_vel_x)
+         
+
                 
-                # max_=max(abs(fw_vel_x),abs(rw_vel_x),abs(lw_vel_x))
-                # min_=min(abs(fw_vel_x),abs(rw_vel_x),abs(lw_vel_x))
-                # fw_vel_x= hb_controller.map_vel(fw_vel_x,min_,max_,15,50)
-                # rw_vel_x= hb_controller.map_vel(rw_vel_x,min_,max_,15,50)
-                # lw_vel_x= hb_controller.map_vel(lw_vel_x,min_,max_,15,50)
-                
-                
-                
-                
-                # hb_controller.fw_msg.force.y = fw_vel_x
-                # hb_controller.rw_msg.force.y = rw_vel_x
-                # hb_controller.lw_msg.force.y = lw_vel_x
-                
-                # print(f'fw_vel_x {fw_vel_x}',f'lw_vel_x {lw_vel_x}',f'rw_vel_x {rw_vel_x}')
                 
                 print(f"v={fw_vel_x},{rw_vel_x},{lw_vel_x} at e_err={e_theta}")
-                # hb_controller.fw_pub.publish(hb_controller.fw_msg)
-                # hb_controller.lw_pub.publish(hb_controller.lw_msg) 
-                # hb_controller.rw_pub.publish(hb_controller.rw_msg)
+            
                 
                 hb_controller.vel.linear.x=float(fw_vel_x)
                 hb_controller.vel.linear.y=float(lw_vel_x)
@@ -312,11 +283,9 @@ def main(args=None):
                 hb_controller.vel_pub.publish(hb_controller.vel)
                 print("running")
                 
-                # if(hb_controller.i>0 and hb_controller.i<len((hb_controller.bot_2_x))):
-                #     hb_controller.pen_mode_msg=1
-                #     hb_controller.pen_mode.publish(hb_controller.pen_mode_msg)
+                
 
-            elif (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<0.55:
+            elif (abs(e_x_rframe))< tolerance_dist and (abs(e_y_rframe))<tolerance_dist and (abs(hb_controller.getangle(e_theta)))<tolerance_theta:
                 
                 # Stop the robot by setting wheel forces to zero if goal is reached
              
@@ -324,39 +293,54 @@ def main(args=None):
                 hb_controller.vel.linear.y = 90.0
                 hb_controller.vel.linear.z = 90.0
                 
-                # # hb_controller.fw_msg.force.y = 0.0
-                # # hb_controller.rw_msg.force.y = 0.0
-                # # hb_controller.lw_msg.force.y = 0.0
+         
                 hb_controller.vel_pub.publish(hb_controller.vel)
-                    
-                
-                
-                # # print(f"i={hb_controller.i}")
-                # hb_controller.fw_pub.publish(hb_controller.fw_msg)
-                # hb_controller.lw_pub.publish(hb_controller.lw_msg)
-                # hb_controller.rw_pub.publish(hb_controller.rw_msg)
-                # hb_controller.vel.linear.x=fw_vel_x
-                # hb_controller.vel.linear.y= rw_vel_x
-                # hb_controller.vel.linear.z= lw_vel_x
-                
+ 
                 print("zero")
                 # time.sleep(1)
                 
                 hb_controller.i+=1
+                hb_controller.iter.data=hb_controller.i
+                hb_controller.iter_pub.publish(hb_controller.iter)
                 if hb_controller.i==len(hb_controller.bot_2_x):
                     # time.sleep(2)
                     hb_controller.vel.linear.x = 90.0
                     hb_controller.vel.linear.y = 90.0
                     hb_controller.vel.linear.z=90.0  
-                    # hb_controller.pen_bool_msg.data=False
-                    # hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)                 
+                
                     hb_controller.vel_pub.publish(hb_controller.vel)
-                    # time.sleep(0.5)
-                    print("I DID THE JOB ;)")
+                    hb_controller.pen_bool_msg.data=False
+                    hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
+                    
+                    hb_controller.ctr+=1
+                    time.sleep(0.5)
+                    if hb_controller.ctr==1:
+                        hb_controller.bot_2_x=hb_controller.x_dict['contour20']
+                        hb_controller.bot_2_y=hb_controller.y_dict['contour20']
+                        hb_controller.i=0
+                        
+                    elif hb_controller.ctr==2:
+                        hb_controller.bot_2_x=hb_controller.x_dict['contour10']
+                        hb_controller.bot_2_y=hb_controller.y_dict['contour10']
+                        hb_controller.i=0
+                    elif hb_controller.ctr==3:
+                        hb_controller.bot_2_x=hb_controller.x_dict['contour7']
+                        hb_controller.bot_2_y=hb_controller.y_dict['contour7']
+                        hb_controller.i=0
+                        print("I DID THE JOB ;)")
+                        
+                    else:
+                        hb_controller.vel.linear.x = 90.0
+                        hb_controller.vel.linear.y = 90.0
+                        hb_controller.vel.linear.z=90.0  
+                                
+                        hb_controller.vel_pub.publish(hb_controller.vel)
+                        time.sleep(500)
+                        
                     
                     
             
-                # if(hb_controller.i==40):
+                # if(hb_controller.i==len(hb_controller.bot_2_x)):
                 #     hb_controller.pen_bool_msg.data=False
                 #     hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
                 #     time.sleep(1)
