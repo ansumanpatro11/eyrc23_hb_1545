@@ -60,6 +60,8 @@ class HBController(Node):
         # Initialze Publisher and Subscriber
         
         self.vel_pub= self.create_publisher(Twist,'/cmd_vel/bot3',1)
+        self.stop_pub= self.create_publisher(Bool,'/stop_3',1)
+
         self.pen_bool = self.create_publisher(Bool, '/pen3_down_intermediate', 1)
         self.pen_final=self.create_publisher(Bool,'/pen3_down',1)
         self.pen_sub=self.create_subscription(Bool,'/all_down',self.pen_callback,1)
@@ -76,15 +78,15 @@ class HBController(Node):
         
         
         
-        self.pid_const_linear={'Kp':0.66,'Ki':0.00,'Kd':0.00000001} 
-        self.pid_const_angular={'Kp':3.6,'Ki':0.00000,'Kd':0.00001}
+        self.pid_const_linear={'Kp':0.7,'Ki':0.00,'Kd':0.00000001} 
+        self.pid_const_angular={'Kp':3.7,'Ki':0.00000,'Kd':0.00005}
         self.intg_const={'linear':0.0,'angular':0.0} 
-        self.last_error_const={'linear':0.1,'angular':0.18}
+        self.last_error_const={'linear':0.1,'angular':0.185}
         self.i=0
         self.iter=Int32()
 
         self.vel=Twist()
-        
+        self.stop=Bool()
         # self.pen_mode_msg=Int32()
         self.pen_bool_msg = Bool()
         self.pen_final_msg=Bool()
@@ -146,10 +148,10 @@ class HBController(Node):
     def fw_pwm(self,rpm):
         pwm=0.0
      
-        if rpm>10:
+        if rpm>=11:
             d={'a':-0.000,'b':0.0001,'c':-1.6928,'d':102.1493}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
-        elif rpm<-10:
+        elif rpm<=-11:
             d={'a':-0.0006,'b':-0.0440,'c':-2.9334,'d':75.5371}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
         else:
@@ -159,10 +161,10 @@ class HBController(Node):
     def lw_pwm(self,rpm):
         pwm=0.0
      
-        if rpm>10:
+        if rpm>=11:
             d={'a':0.0001,'b':-0.0132,'c':-1.4753,'d':101.0865}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
-        elif rpm<-10:
+        elif rpm<=-11:
             d={'a':0.0003,'b':0.0243,'c':-1.1821,'d':87.1315}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
         else:
@@ -170,12 +172,12 @@ class HBController(Node):
         return pwm
           
     def rw_pwm(self,rpm):
-        pwm=0.0
+        pwm=0.01
      
-        if rpm>10:
+        if rpm>=11:
             d={'a':-0.0001,'b':0.0103,'c':-2.0183,'d':104.8149}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
-        elif rpm<-10:
+        elif rpm<=-11:
             d={'a':-0.0003,'b':-0.0184,'c':-2.1465,'d':81.1205}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
         else:
@@ -259,7 +261,7 @@ def main(args=None):
                 hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
                 time.sleep(1)
             
-            if (abs(e_x_rframe))> tolerance_dist or (abs(e_y_rframe))>tolerance_dist or (abs(hb_controller.getangle(e_theta)))>tolerance_theta:
+            if ((abs(e_x_rframe))> tolerance_dist or (abs(e_y_rframe))>tolerance_dist or (abs(hb_controller.getangle(e_theta)))>tolerance_theta) and hb_controller.i<91:
                 fw_vel_x, rw_vel_x, lw_vel_x = inverse_kinematics(vel_x, vel_y, vel_w)
                 
                 
@@ -317,17 +319,18 @@ def main(args=None):
    
                 print("zero")
                 # time.sleep(1)
-                
                 if hb_controller.i==0 and hb_controller.pen is True: 
                 
                     hb_controller.pen_final_msg.data=True
                     hb_controller.pen_final.publish(hb_controller.pen_final_msg)
                 
                     hb_controller.i+=1
+                    
                 
                     
                 elif hb_controller.i>0:
                     hb_controller.i+=1
+                   
                     hb_controller.iter.data=hb_controller.i
                     hb_controller.iter_pub.publish(hb_controller.iter)
                 
@@ -340,18 +343,46 @@ def main(args=None):
                     hb_controller.vel_pub.publish(hb_controller.vel)
                     
                     
-                if hb_controller.i==len(hb_controller.bot_3_x):
-                    # time.sleep(2)
-                    hb_controller.vel.linear.x = 90.0
-                    hb_controller.vel.linear.y = 90.0
-                    hb_controller.vel.linear.z=90.0  
+            if hb_controller.i==91:
+                # time.sleep(2)
+                print("Inside final loop")
+                hb_controller.vel.linear.x = 90.0
+                hb_controller.vel.linear.y = 90.0
+                hb_controller.vel.linear.z = 90.0  
                 
-                    hb_controller.vel_pub.publish(hb_controller.vel)
-                    hb_controller.pen_bool_msg.data=False
-                    hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-                    
-                    
-                    time.sleep(500)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel.linear.x = 90.0
+                hb_controller.vel.linear.y = 90.0
+                hb_controller.vel.linear.z = 90.0
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel.linear.x = 90.0
+                hb_controller.vel.linear.y = 90.0
+                hb_controller.vel.linear.z = 90.0
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel.linear.x = 90.0
+                hb_controller.vel.linear.y = 90.0
+                hb_controller.vel.linear.z = 90.0
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+
+                hb_controller.stop.data=True
+                hb_controller.stop_pub.publish(hb_controller.stop)
+                hb_controller.pen_final_msg.data=False
+                hb_controller.pen_final.publish(hb_controller.pen_final_msg)
+                hb_controller.pen_final_msg.data=False
+                hb_controller.pen_final.publish(hb_controller.pen_final_msg)
+                
+                
+                
+                time.sleep(500)
                     
                     
                     

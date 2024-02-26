@@ -60,6 +60,8 @@ class HBController(Node):
 
 
         self.vel_pub= self.create_publisher(Twist,'/cmd_vel/bot2',1)
+        self.stop_pub= self.create_publisher(Bool,'/stop_2',1)
+
         self.pen_bool = self.create_publisher(Bool, '/pen2_down_intermediate', 1)
         self.pen_final=self.create_publisher(Bool,'/pen2_down',1)
         self.pen_sub=self.create_subscription(Bool,'/all_down',self.pen_callback,1)
@@ -73,15 +75,15 @@ class HBController(Node):
         
         
         
-        self.pid_const_linear={'Kp':0.69,'Ki':0.00,'Kd':0.00000001}
-        self.pid_const_angular={'Kp':3.6,'Ki':0,'Kd':0.00001} #without using time at 0.2 theta
+        self.pid_const_linear={'Kp':1.2,'Ki':0.00,'Kd':0.00000001}
+        self.pid_const_angular={'Kp':3.8,'Ki':0,'Kd':0.00005} #bot2 bhala pro
         self.intg_const={'linear':0.0,'angular':0.0}
-        self.last_error_const={'linear':0.0,'angular':0.0}
+        self.last_error_const={'linear':0.0,'angular':0.18}
         self.i=0
         self.ctr=0
         self.iter=Int32()
         self.vel=Twist()
-        
+        self.stop=Bool()
         
         self.pen_bool_msg = Bool()
         self.pen_final_msg=Bool()
@@ -95,7 +97,7 @@ class HBController(Node):
         self.bot_2_x,self.bot_2_y=bot_2_goals(self.bot_2_x,self.bot_2_y)
         
         self.bot_2_theta = 0.0
-
+        print(f'len={len(self.bot_2_x)}')
         # self.x_dict,self.y_dict=read_detected_points(detected_points_file)
         # if self.ctr==0:
         #     self.bot_2_x=self.x_dict['contour24']
@@ -140,10 +142,10 @@ class HBController(Node):
     def fw_pwm(self,rpm):
         pwm=0
      
-        if rpm>10:
+        if rpm>=11:
             d={'a':0.0002,'b':-0.0185,'c':-1.3463,'d':103.2878}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
-        elif rpm<-10:
+        elif rpm<=-11:
             d={'a':-0.0001,'b':-0.0152,'c':-2.2642,'d':79.1319}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
         else:
@@ -153,10 +155,10 @@ class HBController(Node):
     def lw_pwm(self,rpm):
         pwm=0
      
-        if rpm>10:
+        if rpm>=11:
             d={'a':-0.0004,'b':0.0312,'c':-2.4746,'d':109.1201}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
-        elif rpm<-10:
+        elif rpm<-11:
             d={'a':-0.0003,'b':-0.0287,'c':-2.6438,'d':75.6338}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
         else:
@@ -166,10 +168,10 @@ class HBController(Node):
     def rw_pwm(self,rpm):
         pwm=0
      
-        if rpm>10:
+        if rpm>=11:
             d={'a':-0.0012,'b':0.0846,'c':-3.5111,'d':113.3038}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
-        elif rpm<-10:
+        elif rpm<=-11:
             d={'a':-0.0002,'b':-0.0233,'c':-2.5526,'d':77.9788}
             pwm=int(d['a']* pow(rpm, 3) + d['b'] * pow(rpm, 2) + d['c'] * rpm + d['d'])
         else:
@@ -311,6 +313,11 @@ def main(args=None):
                     
                 elif hb_controller.i>0:
                     hb_controller.i+=1
+                    if hb_controller.i==2:
+                        hb_controller.vel.linear.x = 90.0
+                        hb_controller.vel.linear.y = 90.0
+                        hb_controller.vel.linear.z = 90.0
+                        time.sleep(4)
                     hb_controller.iter.data=hb_controller.i
                     hb_controller.iter_pub.publish(hb_controller.iter)
                 
@@ -322,18 +329,39 @@ def main(args=None):
                     
                     hb_controller.vel_pub.publish(hb_controller.vel)
                     
-                if hb_controller.i==len(hb_controller.bot_2_x):
-                    # time.sleep(2)
-                    hb_controller.vel.linear.x = 90.0
-                    hb_controller.vel.linear.y = 90.0
-                    hb_controller.vel.linear.z=90.0  
+            if hb_controller.i==90:
+                # time.sleep(2)
+                print("inside final loop")
+                hb_controller.vel.linear.x = 90.0
+                hb_controller.vel.linear.y = 90.0
+                hb_controller.vel.linear.z = 90.0  
+                hb_controller.vel_pub.publish(hb_controller.vel)
+
+                hb_controller.stop.data=True
+                hb_controller.stop_pub.publish(hb_controller.stop)
+                hb_controller.vel.linear.x = 90.0
+                hb_controller.vel.linear.y = 90.0
+                hb_controller.vel.linear.z = 90.0
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel.linear.x = 90.0
+                hb_controller.vel.linear.y = 90.0
+                hb_controller.vel.linear.z = 90.0
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel.linear.x = 90.0
+                hb_controller.vel.linear.y = 90.0
+                hb_controller.vel.linear.z = 90.0
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+                hb_controller.vel_pub.publish(hb_controller.vel)
+
+
+                hb_controller.pen_final_msg.data=False
+                hb_controller.pen_final.publish(hb_controller.pen_final_msg)
                 
-                    hb_controller.vel_pub.publish(hb_controller.vel)
-                    hb_controller.pen_bool_msg.data=False
-                    hb_controller.pen_bool.publish(hb_controller.pen_bool_msg)
-                    
-                    
-                    time.sleep(500)
+                
+                time.sleep(500)
                     
                         
                     
