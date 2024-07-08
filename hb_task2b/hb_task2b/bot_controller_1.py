@@ -1,3 +1,4 @@
+
 #! /usr/bin/env python3
 
 '''
@@ -43,8 +44,8 @@ class HBController(Node):
         
 
         # Initialise the required variables
-        self.bot_1_x = []
-        self.bot_1_y = []
+        self.bot_1_x = [300,400,300,400]
+        self.bot_1_y = [100,100,200,100]
         self.bot_1_theta = 0.0
 
         # Initialze Publisher and Subscriber

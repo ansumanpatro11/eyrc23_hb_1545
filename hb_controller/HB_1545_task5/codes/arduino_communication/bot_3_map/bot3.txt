@@ -1,0 +1,104 @@
+left wheel (0-90)
+	// Define coefficients of the equation
+const float a = 0.0001;
+const float b = -0.0132;
+const float c = -1.4753;
+const float d = 101.0865;
+
+// Define the function to calculate PWM based on RPM
+float calculatePWM(float RPM) {
+  float PWM;
+  
+  // Use the coefficients and the given equation to calculate PWM
+  PWM = a * pow(RPM, 3) + b * pow(RPM, 2) + c * RPM + d;
+  
+  return PWM;
+}
+	
+left wheel(90-180)
+const float a = 0.0001;
+const float b = 0.0043;
+const float c = -1.6149;
+const float d = 84.3707;
+
+// Define the function to calculate PWM based on RPM
+float calculatePWM(float RPM) {
+  float PWM;
+  
+  // Use the coefficients and the given equation to calculate PWM
+  PWM = a * pow(RPM, 3) + b * pow(RPM, 2) + c * RPM + d;
+  
+  return PWM;
+}
+
+right wheel(0-90)
+
+// Define coefficients of the equation
+const float a = -0.0003;
+const float b = 0.0175;
+const float c = -2.1527;
+const float d = 105.3762;
+
+// Define the function to calculate PWM based on RPM
+float calculatePWM(float RPM) {
+  float PWM;
+  
+  // Use the coefficients and the given equation to calculate PWM
+  PWM = a * pow(RPM, 3) + b * pow(RPM, 2) + c * RPM + d;
+  
+  return PWM;
+}
+
+right wheel(90-180)
+
+// Define coefficients of the equation
+const float a = -0.0002;
+const float b = -0.0135;
+const float c = -2.0341;
+const float d = 81.8526;
+
+// Define the function to calculate PWM based on RPM
+float calculatePWM(float RPM) {
+  float PWM;
+  
+  // Use the coefficients and the given equation to calculate PWM
+  PWM = a * pow(RPM, 3) + b * pow(RPM, 2) + c * RPM + d;
+  
+  return PWM;
+}
+
+fw_wheel(0-90)
+
+// Define coefficients of the equation
+const float a = 0.0000;
+const float b = -0.0001;
+const float c = -1.6928;
+const float d = 102.1493;
+
+// Define the function to calculate PWM based on RPM
+float calculatePWM(float RPM) {
+  float PWM;
+  
+  // Use the coefficients and the given equation to calculate PWM
+  PWM = a * pow(RPM, 3) + b * pow(RPM, 2) + c * RPM + d;
+  
+  return PWM;
+}
+fw_wheel(90-180)
+
+const float a = -0.0006;
+const float b = -0.0440;
+const float c = -2.9334;
+const float d = 75.5371;
+
+// Define the function to calculate PWM based on RPM
+float calculatePWM(float RPM) {
+  float PWM;
+  
+  // Use the coefficients and the given equation to calculate PWM
+  PWM = a * pow(RPM, 3) + b * pow(RPM, 2) + c * RPM + d;
+  
+  return PWM;
+}
+
+
